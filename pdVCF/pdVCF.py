@@ -28,8 +28,8 @@ def vcf2dataframe(filename, genotype_level=True, info_level=True, UID=False):
         in the DataFrame being generated very slowly. This is
         especially true for the UID variable.
     '''
-    #if filename.endswith(".gz"):
-    #    raise IOError("pdVCF does not support compressed VCF files.")
+    if filename.endswith(".gz"):
+        raise IOError("pdVCF does not support compressed VCF files.")
 
     # get INFO fields and Headers as lists
     VCF_HEADER = get_vcf_header(filename)
