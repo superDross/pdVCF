@@ -1,5 +1,5 @@
 # pdVCF
-Manipulate a VCF as a Pandas DataFrame
+Convert and manipulate a VCF file as a MultiIndexed Pandas DataFrame
 
 ### Example Usage
 ```python3
@@ -26,11 +26,11 @@ sample.vcf
 
 ## To Do
 - Testing
-  - test filtering against vcftools
-  - unit testing
+  - Test filtering against vcftools
+  - Unit testing
 
 - Functionality
-  - get it to handle multiallelic variants. Which affects: 
-  - Genotype fields: AD
-  - Info fields: AF, AC etc.
-  - Add more filtering options
+  - Implement proper handling of multiallelic variants. Which affects: 
+    - Genotype fields: AD
+    - Info fields: AF, AC etc.
+    - Add more filtering options

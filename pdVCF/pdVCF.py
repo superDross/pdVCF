@@ -75,7 +75,22 @@ class VCF(object):
         self.vcf = sub.drop(uncalled)
         return self.vcf
 
+
+    def filter_flag(self, flag='PASS', include=True):
+        ''' Include or exclude variants with the given flag
+            in the VCF FILTER field.
+        Args:
+            flag: defaults to 'PASS'
+            include: include in the vcf if true, otherwise exclude
+        '''
+        if include:
+            self.vcf = self.vcf[self.vcf['FILTER'] == flag]
+        else:
+            self.vcf = self.vcf[self.vcf['FILTER'] != flag]
     
+        return self.vcf
+
+
     def filter_genotype(self, minDP=None, minGQ=None, minAB=None):
         ''' Filter for variants in which all the samples in the given vcf 
             meet the minimum genotype values given.
@@ -153,11 +168,13 @@ class VCF(object):
         ref_mask = (self.vcf.REF.str.len() == 1) | (self.vcf.REF.str.contains(','))
 
         if include:
-            return self.vcf[~alt_mask & ref_mask]
+            self.vcf = self.vcf[~alt_mask & ref_mask]
         else:
-            return self.vcf[alt_mask & ref_mask]
+            self.vcf = self.vcf[alt_mask & ref_mask]
 
+        return self.vcf
     
+
     def biallelic(self):
         ''' Filter for biallelic variants only.
         '''
@@ -213,9 +230,11 @@ class VCF(object):
             include in the vcf if True, otherwise exclude
         '''
         if include:
-            return self.vcf[self.vcf['CHROM'] == chrom]
+            self.vcf = self.vcf[self.vcf['CHROM'] == chrom]
         else:
-            return self.vcf[self.vcf['CHROM'] != chrom]
+            self.vcf = self.vcf[self.vcf['CHROM'] != chrom]
+
+        return self.vcf
 
 
     @staticmethod
