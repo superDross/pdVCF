@@ -211,12 +211,12 @@ def get_info_data(df, info_fields):
 
     if not isinstance(df.columns, pd.MultiIndex):
         # create another multi-index df without the info fields where the second level is nothing
-        df = pd.DataFrame(data=df.drop('INFO', axis=1).values,
+        df = pd.DataFrame(data=df.drop('INFO', axis=1, level=0).values,
                               columns=pd.MultiIndex.from_tuples(
-                                [(x, '') for x in list(df.drop('INFO', axis=1).columns)] ))
+                                [(x, '') for x in list(df.drop('INFO', axis=1, level=0).columns)] ))
 
     else:
-        df = df.drop('INFO', axis=1)
+        df = df.drop('INFO', level=0, axis=1)
 
     variant = df.iloc[:, :8]
     samples = df.iloc[:, 8:]
@@ -249,7 +249,7 @@ def index2UID(df):
         raise ValueError("The UID is not unique.")
         
     # remove UID column (UID now only accessible via index)  
-    df = df.drop('UID', axis=1)
+    df = df.drop('UID', axis=1, level=0)
 
     return df.rename(UID)
 
