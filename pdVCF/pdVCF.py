@@ -47,7 +47,7 @@ class VCF(object):
 
 
     def subset(self, sams, exclude_ref=False, remove_uncalled=True):
-        ''' Subset a multisample VCF by a given samples.
+        ''' Subset a multisample VCF by a given sample(s).
         Args:
             vcf: Pandas DataFrame VCF
             sams: list of samples to subset the vcf for
@@ -144,13 +144,19 @@ class VCF(object):
             return self.vcf
         
     
-    def remove_indels(self):
-        ''' Remove indels from vcf.
+    def indels(self, include=True):
+        ''' Remove or filter for indels from vcf.
+        Args:
+            include: include in the vcf if true, otherwise exclude
         '''
         alt_mask = (self.vcf.ALT.str.len() == 1) | (self.vcf.ALT.str.contains(','))
         ref_mask = (self.vcf.REF.str.len() == 1) | (self.vcf.REF.str.contains(','))
-        return(self.vcf[alt_mask & ref_mask])
-    
+
+        if include:
+            return self.vcf[~alt_mask & ref_mask]
+        else:
+            return self.vcf[alt_mask & ref_mask]
+
     
     def biallelic(self):
         ''' Filter for biallelic variants only.
@@ -167,8 +173,8 @@ class VCF(object):
     
     
     def positions(self, positions, include=True):
-        ''' Include or exclude variants in the given position(s)
-            or position ranges.
+        ''' Include or exclude variants that lie within 
+            the given position(s) or position ranges.
         
         Args:
             positions: a position, position ranges or list of the two e.g.
@@ -199,6 +205,19 @@ class VCF(object):
         return self.vcf
     
     
+    def chromosome(self, chrom, include=True):
+        ''' Include or exculde variants within a given chromosome.
+
+        Args: 
+            chrom: chromosome
+            include in the vcf if True, otherwise exclude
+        '''
+        if include:
+            return self.vcf[self.vcf['CHROM'] == chrom]
+        else:
+            return self.vcf[self.vcf['CHROM'] != chrom]
+
+
     @staticmethod
     def natural_sort(l): 
         ''' Sort a list in human natural alphanumerical

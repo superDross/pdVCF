@@ -36,7 +36,6 @@ def vcf2dataframe(filename, genotype_level=True, info_level=True, UID=False):
     # get INFO fields and Headers as lists
     VCF_HEADER = get_vcf_header(filename)
     INFO_FIELDS = get_info_fields(filename)
-    print(INFO_FIELDS)
 
     # Count how many comment lines should be skipped.
     comments = count_comments(filename)
