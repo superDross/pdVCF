@@ -46,17 +46,6 @@ class VCF(object):
         return self.vcf['INFO'][info]
 
 
-
-class FilterVCF(VCF):
-    ''' A VCF file which can be readily filtered
-    
-    Attributes:
-        vcf: vcf file to be converted to a Pandas DataFrame or a VCF object
-    '''
-    def __init__(self, vcf):
-        VCF.__init__(self, vcf)
-
-
     def subset(self, sams, exclude_ref=False, remove_uncalled=True):
         ''' Subset a multisample VCF by a given samples.
         Args:
@@ -193,7 +182,7 @@ class FilterVCF(VCF):
         
         # get the indexes of the varants within pos from the vcf 
         for pos in positions:
-            pos = FilterVCF.pos2range(pos)
+            pos = VCF.pos2range(pos)
             chrom, start, end = [int(x) for x in re.split(r'[:-]', pos)]
             mask = (self.vcf['CHROM'] == chrom) & (self.vcf['POS'] >= start) & (self.vcf['POS'] <= end)
             variants = self.vcf[mask].index.tolist()
@@ -205,7 +194,7 @@ class FilterVCF(VCF):
         if not include:
             selected_variants = list(set(self.vcf.index.tolist()) - set(selected_variants))
             
-        self.vcf = self.vcf.loc[FilterVCF.natural_sort(selected_variants)] 
+        self.vcf = self.vcf.loc[VCF.natural_sort(selected_variants)] 
 
         return self.vcf
     
@@ -233,5 +222,3 @@ class FilterVCF(VCF):
             return pos
         
         
-    
-
