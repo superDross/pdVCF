@@ -1,249 +1,237 @@
-''' Manipulate Multi-Sample VCF files in Pandas (Python3). UPDATE GITHUB GIST!
-'''
-from collections import OrderedDict
+from pdVCF.vcf2dataframe import vcf2dataframe
 import pandas as pd
+import numpy as np
 import re
-import sys
-import os
-import collections
 
-# path to this %%file
-if sys.platform == "win32":
-    file_path = os.path.dirname(os.path.abspath("__file__"))+"\\"
-else:
-    file_path = os.path.dirname(os.path.abspath("__file__"))+"/"
-
-pd.set_option('display.max_columns', 500)
-pd.set_option('display.max_colwidth', -1)
-
-
-def vcf2dataframe(filename, genotype_level=True, info_level=True, UID=False):
-    '''Open a VCF file and returns a MultiIndex pandas.DataFrame.
-    Args:
+class VCF(object):
+    ''' A VCF file stored as a Pandas DataFrame
+    
+    Atrributes:
+        vcf: vcf file to be converted to a Pandas DataFrame or a VCF object
         genotype_level: place the genotype information into a second level column index
         info_level: place the info IDs into a second level column index
         UID: rename index to a unique variant identifier
-    Notes:
-        having any of these variables set to True will result
-        in the DataFrame being generated very slowly. This is
-        especially true for the UID variable.
-    '''
-    if filename.endswith(".gz"):
-        raise IOError("pdVCF does not support compressed VCF files.")
-
-    # get INFO fields and Headers as lists
-    VCF_HEADER = get_vcf_header(filename)
-    INFO_FIELDS = get_info_fields(filename)
-
-    # Count how many comment lines should be skipped.
-    comments = count_comments(filename)
-
-    # Return a simple dataframe representative of the VCF data.
-    df = pd.read_table(filename, skiprows=comments,
-                       names=VCF_HEADER, usecols=range(len(VCF_HEADER)))
-
-    if genotype_level:
-        df = get_genotype_data(df)
-
-    if info_level:
-        df = get_info_data(df, INFO_FIELDS)
-
-    if UID:
-        df = index2UID(df)
-    #else:
-    #    df = df.set_index(['CHROM', 'POS', 'REF', 'ALT'])
-
-    return df
-
-
-def get_vcf_header(filename):
-    ''' Get all header names from a given VCF file and return as a list.
-    '''
-    with open(filename) as input_file:
-        row = [x for x in input_file if not x.startswith('##')] # skip unwanted headers
-        head = next(iter(row))    # generator to deal with the header line only.
-        split_head = [re.sub(r'#|\n', '', x) for x in head.split("\t")]
-        return split_head
-
-
-def get_info_fields(filename):
-    ''' Get all ID names in the given VCFs INFO field and return as a list.
-    '''
-    with open(filename) as input_file:
-        row = [x for x in input_file if x.startswith('##INFO')]
-        info_fields = [x[11:].split(',')[0] for x in row]
-        return info_fields
-
-
-
-def count_comments(filename):
-    ''' Count all lines in a given VCF file starting with #.
-    '''
-    comments = 0
-    with open(filename) as f:
-        for line in f:
-            if line.startswith('#'):
-                comments += 1
-
-            else:
-                break
-
-    return comments
-
-
-
-def replace_series_strings(df, col, dic, substring):
-    ''' Replace the the keys with the items of the given
-        dictionary for all strings or substrings in a
-        given column
-    Args:
-        col: column name to replace strings
-        dic: dictionary where the key is the string to replace with the item
-        substrings: search and replace for either substrings (True) or exact strings (False)
-    Returns:
-        dataframe with the given column having all the
-        entries identified as the key in the given dict
-        replaced with the item in said dict
-    '''
-    if not isinstance(substring, bool):
-        raise TypeError("substring argument must equal True or False")
-
-    for string, correction in dic.items():
-        if substring is True:
-            df[col] = df[col].str.replace(string, correction)
-        elif substring is False:
-            df[col] = df[col].replace(string, correction, regex=True)
-
-    return df
-
-
-
-def get_genotype_data(df):
-    ''' Give each sample column a second level column for every field
-        detailed in the FORMAT column and return as a MultIndex dataframe.
-    Args:
-        df: DataFrame deriving from a VCF via vcf2dataframe()
-    '''
-    # contain the variant columns and the sample names in seperate lists
-    normal = list(df.iloc[:, :9].columns)
-    samples = list(df.iloc[:, 9:].columns)
-    form = df['FORMAT'].str.split(":")[0]
-
-    # These columns remain the same
-    remain = pd.DataFrame(data=df[normal].values,
-                          columns=pd.MultiIndex.from_tuples(
-                            [(x, '') for x in normal] ))
-
-    # list of dataframes where every sample has sub columns for each genotype info
-    sams = [pd.DataFrame(data=list(df[col].str.split(':').dropna()),
-                         columns=pd.MultiIndex.from_product([ [col], form ]))
-            for col in samples]
-    
-    # add allele balance to sample genotype information
-    sams = [calc_AB(sam) for sam in sams]
-    
-    # concat all dfs in the list
-    df2 = pd.concat([remain] + sams, axis=1)
-
-    return df2
-
-
-
-def calc_AB(vcf):
-    ''' Calculate allele balance for all samples in a given 
-        pdVCF. Also converts DP & GQ to numeric type.
-    
-    Args:
-        vcf: pdVCF with genotype information extracted
         
     Notes:
-        ONLY WORKS FOR BIALLELIC ARIANTS
+        it is not recommended to alter the boolean attributes when initilising
+        a VCF object, as it may break method functionality and limit data 
+        manipulation of the resulting object.
     '''
-    sam = vcf.columns.levels[0][0]
-    vcf[sam,'DP'] = pd.to_numeric(vcf[sam,'DP'])
-    vcf[sam,'GQ'] = pd.to_numeric(vcf[sam,'GQ'])
-    AD = vcf.xs('AD', level=1, axis=1).unstack().str.split(",", n=2)
-    DP = vcf.xs('DP', level=1, axis=1).unstack()
-    AB = round(pd.to_numeric(AD.str[1]) / pd.to_numeric(DP), 2)
-    vcf[sam, 'AB'] = AB.tolist()
+    def __init__(self, vcf, genotype_level=True, info_level=True, UID=True):
         
-    return vcf
-
-
-
-def get_info_data(df, info_fields):
-    ''' Transform the INFO IDs into second level column indexes and return
-        the df as a MultiIndex dataframe.
-    Args:
-        df: DataFrame deriving from a VCF via vcf2dataframe()
-        info_fields: a list of all the INFO IDs in the given df
-    '''
-    # Alter Info field for some variables that don't work well
-    df['INFO'] = df['INFO'].str.replace(";DB",";DB=1")
-    df['INFO'] = df['INFO'].str.replace(";STR",";STR=1")
-
-    # identify Info fields not present in each row and fill them with a 0
-    for name in info_fields:
-        if name == info_fields[0]:
-            name = "{}=".format(name)
+        if isinstance(vcf, pd.DataFrame):
+            self.vcf = vcf
         else:
-            name = ";{}=".format(name)
+            self.vcf = vcf2dataframe(vcf, genotype_level=genotype_level,
+                                     info_level=info_level, UID=UID)
+    
+    def get_samples(self):
+        ''' Get all sample names within the vcf and return as a list
+        '''
+        return self.vcf.xs('DP', level=1, axis=1).columns.tolist()
 
-        not_present = df['INFO'][~df.INFO.str.contains(name)].add("{}0".format(name))
-        present = df['INFO'][df.INFO.str.contains(name)]
-        df['INFO'] = not_present.append(present).sort_index()
 
-    # reorder INFO fields so they are are all in the same order
-    df['INFO'] = df['INFO'].apply(lambda x: ';'.join(elem for elem in sorted(x.split(";"))))
+    def get_genotype(self, gen):
+        ''' Access specific genotype information across samples
+            in the vcf.
+        Args:
+            gen: genotype attribute of interest in string format e.g 'DP'
+        '''
+        return self.vcf.xs(gen, level=1, axis=1)
 
-    # remove all info_field names from the info values, starting with the info field with the longest name first
-    unwanted = info_fields + ['=']
-    unwanted.sort(key=len, reverse=True)
-    remove = collections.OrderedDict([(x, '') for x in unwanted])
-    df = replace_series_strings(df, col='INFO', dic=remove, substring=True)
-
-    # create a new multi-index df containing only the info fields with the IDs as the second level
-    info = pd.DataFrame(data=list(df['INFO'].str.split(';')),
-                        columns=pd.MultiIndex.from_product([ ['INFO'], info_fields]))
-
-    if not isinstance(df.columns, pd.MultiIndex):
-        # create another multi-index df without the info fields where the second level is nothing
-        df = pd.DataFrame(data=df.drop('INFO', axis=1).values,
-                              columns=pd.MultiIndex.from_tuples(
-                                [(x, '') for x in list(df.drop('INFO', axis=1).columns)] ))
-
-    else:
-        df = df.drop('INFO', axis=1)
-
-    variant = df.iloc[:, :8]
-    samples = df.iloc[:, 8:]
-
-    # replace the info fields in the original df with the multi-index df created above
-    final_df = pd.concat([variant] + [info] + [samples], axis=1)
-
-    # MQ and MQ0 are in the wrong order so name swapping is required
-    if 'MQ0' in info_fields and 'MQ' in info_fields:
-        final_df = final_df.rename(columns={'MQ0': 'TEMP', 'MQ': 'MQ0'})
-        final_df = final_df.rename(columns={'TEMP': 'MQ'})
-
-    return final_df
+    
+    def get_info(self, info):
+        ''' Return INFO field of interest e.g. 'AC'
+        '''
+        return self.vcf['INFO'][info]
 
 
 
-def index2UID(df):
-    ''' Replace the index with a unique variant identifier.
+class FilterVCF(VCF):
+    ''' A VCF file which can be readily filtered
+    
+    Attributes:
+        vcf: vcf file to be converted to a Pandas DataFrame or a VCF object
     '''
-    if isinstance(df.columns, pd.MultiIndex):
-        UID = df.apply(lambda x: "{}:{}-{}/{}".format(x['CHROM'][0], x['POS'][0],
-                                                      x['REF'][0], x['ALT'][0]), axis=1)
-    else:
-         UID = df.apply(lambda x: "{}:{}-{}/{}".format(x['CHROM'], x['POS'],
-                                                  x['REF'], x['ALT']), axis=1)
+    def __init__(self, vcf):
+        VCF.__init__(self, vcf)
 
-    df['UID'] = UID
 
-    if df['UID'].value_counts()[0] > 1:
-        raise ValueError("The UID is not unique.")
+    def subset(self, sams, exclude_ref=False, remove_uncalled=True):
+        ''' Subset a multisample VCF by a given samples.
+        Args:
+            vcf: Pandas DataFrame VCF
+            sams: list of samples to subset the vcf for
+            exlude_ref: remove variant if all GT values for subset are 0/0
+            remove_uncalled: remove variant if all GT values for subset are ./.
 
-    return df.rename(UID)
+        Returns:
+            subsetted Pandas DataFrame VCF
+        '''
+        # split variant and genotype information 
+        genotype = self.vcf[sams]
+        num_info = self.vcf['INFO'].columns.shape[0]
+        variant = self.vcf.ix[:,:8+num_info]
+
+        GT = genotype.xs('GT', level=1, axis=1)
+        uncalled= []
+
+        if remove_uncalled:
+            uncalled = GT[GT[sams] == './.'].dropna().index.tolist() 
+
+        if exclude_ref:
+            uncalled += GT[GT[sams] == '0/0'].dropna().index.tolist() 
+
+        sub = pd.concat([variant, genotype], axis=1)
+        self.vcf = sub.drop(uncalled)
+        return self.vcf
+
+    
+    def filter_genotype(self, minDP=None, minGQ=None, minAB=None):
+        ''' Filter for variants in which all the samples in the given vcf 
+            meet the minimum genotype values given.
+        
+        Args:
+            minDP: minimum variant depth
+            minGQ: minimum genotype quality
+            minAB: minimum allele balance
+        
+        Notes:
+            Doesn't handle multiallelic information properly and
+            will filter for this first ALT value e.g. if DP = 12,1,100
+            it will be filtered out even if minDP=30.
+        '''
+        # split variant and genotype information
+        num_info = self.vcf['INFO'].columns.shape[0]
+        variant = self.vcf.ix[:,:8+num_info]
+        genotype = self.vcf.ix[:,9+num_info:]
+
+        # store all variants that don't meet the minimum value given for the args here
+        below_min = []
+        
+        if minDP:
+            DP = genotype.xs('DP', level=1, axis=1).fillna(0)
+            above_min = DP[DP >= minDP] 
+            below_min += DP[above_min.isnull().any(axis=1)].index.tolist()
+            
+        if minGQ:
+            GQ = genotype.xs('GQ', level=1, axis=1).fillna(0)
+            above_min = GQ[GQ >= minGQ]
+            below_min +=  GQ[above_min.isnull().any(axis=1)].index.tolist()
+        
+        if minAB:
+            AB = genotype.xs('AB', level=1, axis=1).fillna(0)
+            above_min = AB[AB >= minAB]
+            below_min +=  AB[above_min.isnull().any(axis=1)].index.tolist()
+        
+        # remove variants that don't meet the requirements from the vcf
+        self.vcf = self.vcf.drop(below_min)
+        return self.vcf
+    
+    
+    def filter_info(self, field, value):
+        ''' Filter for variants that are above the given value
+            (if value is number) or are equal to the given value
+            (if value is string).
+            
+        Args:
+            field: INFO field of interest
+            value: string or int value to test the field with
+            
+        Notes:
+            Doesn't handle multiallelic information properly and
+            will filter any thing that has this e.g. if AC = 12,34
+            it will be filtered out even if value=1 as the AC with
+            a comma cant be converted to an int so becomes np.nan
+        '''
+        if isinstance(value, int) or isinstance(value, float):
+            mask = pd.to_numeric(self.vcf['INFO'][field], errors='coerrce') >= value
+            self.vcf = self.vcf[mask]
+            return self.vcf
+        
+        elif isinstance(value, str):
+            mask= self.vcf['INFO'][field] == value
+            self.vcf = self.vcf[mask]
+            return self.vcf
+        
+    
+    def remove_indels(self):
+        ''' Remove indels from vcf.
+        '''
+        alt_mask = (self.vcf.ALT.str.len() == 1) | (self.vcf.ALT.str.contains(','))
+        ref_mask = (self.vcf.REF.str.len() == 1) | (self.vcf.REF.str.contains(','))
+        return(self.vcf[alt_mask & ref_mask])
+    
+    
+    def biallelic(self):
+        ''' Filter for biallelic variants only.
+        '''
+        self.vcf = self.vcf[self.vcf.ALT.str.split(',').str.len() == 1]
+        return self.vcf
+    
+    
+    def multiallelic(self):
+        ''' Filter for multiallelic variants only.
+        '''
+        self.vcf = self.vcf[self.vcf.ALT.str.split(',').str.len() > 1]
+        return self.vcf
+    
+    
+    def positions(self, positions, include=True):
+        ''' Include or exclude variants in the given position(s)
+            or position ranges.
+        
+        Args:
+            positions: a position, position ranges or list of the two e.g.
+                            ['1:2234385', '1:2235901-2240000']
+            include: include in the vcf if true, otherwise exclude
+        '''
+        positions = positions if isinstance(positions, list) else [positions]
+        
+        # get the variants named in positions
+        selected_variants = []
+        
+        # get the indexes of the varants within pos from the vcf 
+        for pos in positions:
+            pos = FilterVCF.pos2range(pos)
+            chrom, start, end = [int(x) for x in re.split(r'[:-]', pos)]
+            mask = (self.vcf['CHROM'] == chrom) & (self.vcf['POS'] >= start) & (self.vcf['POS'] <= end)
+            variants = self.vcf[mask].index.tolist()
+            selected_variants.append(variants)
+            
+        # flatten
+        selected_variants = [y for x in selected_variants for y in x]
+        
+        if not include:
+            selected_variants = list(set(self.vcf.index.tolist()) - set(selected_variants))
+            
+        self.vcf = self.vcf.loc[FilterVCF.natural_sort(selected_variants)] 
+
+        return self.vcf
+    
+    
+    @staticmethod
+    def natural_sort(l): 
+        ''' Sort a list in human natural alphanumerical
+            order.
+        '''
+        convert = lambda text: int(text) if text.isdigit() else text.lower() 
+        alphanum_key = lambda key: [ convert(c) for c in re.split('([0-9]+)', key) ] 
+        return sorted(l, key = alphanum_key)
+    
+    
+    @staticmethod
+    def pos2range(pos, num=0): 
+        ''' Alter a genomic position to a genomic range
+            e.g. 2:1234 becomes 2:1234-1234
+        '''
+        if "-" not in pos:
+            split = pos.split(":")
+            pos = "{}:{}-{}".format(split[0], split[1], int(split[1])+num)
+            return pos
+        else:
+            return pos
+        
+        
+    
 
