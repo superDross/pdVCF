@@ -46,6 +46,31 @@ class VCF(object):
         return self.vcf['INFO'][info]
 
 
+    def passing_variants(self, field, threshold): 
+        ''' Get the variant coordinates and ref/allele bases (UID)
+            of an info/genotype field in which any sample in said 
+            field is equal to or above the given threshold.
+        
+        Args:
+            field: genotype of INFO field i.e. 'DP'
+            value: integer
+        
+        Returns:
+            list of variants where at least one value across all 
+            samples in the vcf pass the given threshold
+        '''
+        if field in self.vcf['INFO'].columns:
+            fields = pd.to_numeric(self.vcf['INFO'][field].T, errors='coerrce')
+            passed = fields[fields >= threshold]
+            variants = passed.index.tolist()
+        else:
+            fields = self.vcf.xs(field, level=1, axis=1).T
+            passed = fields[fields >= threshold].dropna(how='all', axis=1)
+            variants = passed.columns.tolist()
+        
+        return variants
+
+
     def subset(self, sams, exclude_ref=False, remove_uncalled=True):
         ''' Subset a multisample VCF by a given sample(s).
         Args:
