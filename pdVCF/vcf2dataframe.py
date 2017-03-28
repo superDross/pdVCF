@@ -1,6 +1,5 @@
 ''' Manipulate Multi-Sample VCF files in Pandas (Python3). 
 '''
-from collections import OrderedDict
 import pandas as pd
 import numpy as np
 import re
@@ -240,16 +239,17 @@ def index2UID(df):
         UID = df.apply(lambda x: "{}:{}-{}/{}".format(x['CHROM'][0], x['POS'][0],
                                                       x['REF'][0], x['ALT'][0]), axis=1)
     else:
-         UID = df.apply(lambda x: "{}:{}-{}/{}".format(x['CHROM'], x['POS'],
-                                                  x['REF'], x['ALT']), axis=1)
+        UID = df.apply(lambda x: "{}:{}-{}/{}".format(x['CHROM'], x['POS'],
+                                                      x['REF'], x['ALT']), axis=1)
 
     df['UID'] = UID
 
-    if df['UID'].value_counts()[0] > 1:
-        raise ValueError("The UID is not unique.")
+    #if df['UID'].value_counts()[0] > 1:
+    #    raise ValueError("The UID is not unique.")
         
     # remove UID column (UID now only accessible via index)  
-    df = df.drop('UID', axis=1, level=0)
+    df = df.drop('UID', axis=1)
+
 
     return df.rename(UID)
 

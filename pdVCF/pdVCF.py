@@ -1,6 +1,5 @@
 from pdVCF.vcf2dataframe import vcf2dataframe
 import pandas as pd
-import numpy as np
 import re
 
 class VCF(object):
@@ -46,7 +45,7 @@ class VCF(object):
         return self.vcf['INFO'][info]
 
 
-    def passing_variants(self, field, threshold): 
+    def passing_variants(self, field, threshold, under=False): 
         ''' Get the variant coordinates and ref/allele bases (UID)
             of an info/genotype field in which any sample in said 
             field is equal to or above the given threshold.
@@ -54,6 +53,9 @@ class VCF(object):
         Args:
             field: genotype of INFO field i.e. 'DP'
             value: integer
+            under: retrieve variants in which the fields are
+                   under the given value 
+                  
         
         Returns:
             list of variants where at least one value across all 
@@ -69,6 +71,9 @@ class VCF(object):
             passed = fields[fields >= threshold].dropna(how='all', axis=1)
             variants = passed.columns.tolist()
         
+        if under:
+            variants = list(set(self.vcf.index.tolist()) - set(variants))
+
         return variants
 
 
