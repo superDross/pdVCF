@@ -57,7 +57,8 @@ class VCF(object):
         
         Returns:
             list of variants where at least one value across all 
-            samples in the vcf pass the given threshold
+            samples in the vcf pass the given threshold e.g.
+                vcf.passing_variants('DP', 50) -> ['1:2345-A/G']
         '''
         if field in self.vcf['INFO'].columns:
             fields = pd.to_numeric(self.vcf['INFO'][field].T, errors='coerrce')
