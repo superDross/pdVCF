@@ -45,7 +45,7 @@ class VCF(object):
         return self.vcf['INFO'][info]
 
 
-    def passing_variants(self, field, threshold, under=False): 
+    def passing_variants(self, field, threshold, le=False): 
         ''' filter out variants of an info/genotype field in which 
             any sample in said field is equal to or above the given 
             threshold.
@@ -53,8 +53,8 @@ class VCF(object):
         Args:
             field: genotype of INFO field i.e. 'DP'
             value: integer
-            under: retrieve variants in which the fields are
-                   under the given value 
+            le: retrieve variants in which the fields are
+                equal to or less than the given threshold 
                   
         '''
         if field in self.vcf['INFO'].columns:
@@ -66,11 +66,11 @@ class VCF(object):
             passed = fields[fields >= threshold].dropna(how='all', axis=1)
             variants = passed.columns.tolist()
         
-        if under:
+        if le:
             variants = list(set(self.vcf.index.tolist()) - set(variants))
         
-        self.vcf = self.vcf.drop(variants)
-
+        self.vcf = self.vcf.ix[variants]
+        
         return self.vcf
 
 
