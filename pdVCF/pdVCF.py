@@ -45,7 +45,7 @@ class VCF(object):
         return self.vcf['INFO'][info]
 
 
-    def passing_variants(self, field, threshold, le=False): 
+    def passing_variants(self, field, threshold, le=False, info=True): 
         ''' filter out variants of an info/genotype field in which 
             any sample in said field is equal to or above the given 
             threshold.
@@ -55,9 +55,11 @@ class VCF(object):
             value: integer
             le: retrieve variants in which the fields are
                 equal to or less than the given threshold 
+            info: search for the given field within INFO column,
+                  otherwise search within the samples columns
                   
         '''
-        if field in self.vcf['INFO'].columns:
+        if info:
             fields = pd.to_numeric(self.vcf['INFO'][field].T, errors='coerrce')
             passed = fields[fields >= threshold]
             variants = passed.index.tolist()
