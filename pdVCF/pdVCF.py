@@ -2,6 +2,10 @@ from pdVCF.vcf2dataframe import vcf2dataframe
 import pandas as pd
 import re
 
+pd.set_option('display.max_columns', 500)
+pd.set_option('display.max_colwidth', -1)
+
+
 class VCF(object):
     ''' A VCF file stored as a Pandas DataFrame
     
@@ -64,7 +68,9 @@ class VCF(object):
             passed = fields[fields >= threshold]
             variants = passed.index.tolist()
         else:
-            fields = self.vcf.xs(field, level=1, axis=1).T.drop('INFO')
+            fields = self.vcf.xs(field, level=1, axis=1).T
+            if 'INFO' in fields.index.values.tolist():
+                fields = fields.drop('INFO')
             passed = fields[fields >= threshold].dropna(how='all', axis=1)
             variants = passed.columns.tolist()
         
