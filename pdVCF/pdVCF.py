@@ -86,6 +86,7 @@ class VCF(object):
             subsetted Pandas DataFrame VCF
         '''
         # split variant and genotype information 
+        sams = sams if isinstance(sams, list) else [sams]
         genotype = self.vcf[sams]
         num_info = self.vcf['INFO'].columns.shape[0]
         variant = self.vcf.ix[:,:8+num_info]
