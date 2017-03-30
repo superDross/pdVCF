@@ -62,7 +62,7 @@ class VCF(object):
             passed = fields[fields >= threshold]
             variants = passed.index.tolist()
         else:
-            fields = self.vcf.xs(field, level=1, axis=1).T
+            fields = self.vcf.xs(field, level=1, axis=1).T.drop('INFO')
             passed = fields[fields >= threshold].dropna(how='all', axis=1)
             variants = passed.columns.tolist()
         
