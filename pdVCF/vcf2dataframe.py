@@ -28,6 +28,8 @@ def vcf2dataframe(filename, genotype_level=True, info_level=True, UID=False):
         having any of these variables set to True will result
         in the DataFrame being generated very slowly. This is
         especially true for the UID variable.
+
+        INFO DP field renamed to DEPTH
     '''
     if filename.endswith(".gz"):
         raise IOError("pdVCF does not support compressed VCF files.")
@@ -52,8 +54,9 @@ def vcf2dataframe(filename, genotype_level=True, info_level=True, UID=False):
     if UID:
         df = index2UID(df)
     
-    # replace empty cells
+    # replace empty cells and drop FORMAT field
     df = df.replace("", np.nan)
+    df = df.drop('FORMAT', axis=1)
     
     return df
 
@@ -74,6 +77,7 @@ def get_info_fields(filename):
     with open(filename) as input_file:
         row = [x for x in input_file if x.startswith('##INFO')]
         info_fields = [x[11:].split(',')[0] for x in row]
+        info_fields = [x.replace("DP", "DEPTH") for x in info_fields]
         return info_fields
 
 
@@ -183,6 +187,7 @@ def get_info_data(df, info_fields):
     # Alter Info field for some variables that don't work well
     df['INFO'] = df['INFO'].str.replace(";DB",";DB=1")
     df['INFO'] = df['INFO'].str.replace(";STR",";STR=1")
+    df['INFO'] = df['INFO'].str.replace("DP", "DEPTH")
 
     # identify Info fields not present in each row and fill them with a 0
     for name in info_fields:
