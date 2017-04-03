@@ -54,6 +54,7 @@ def check_vcf_for_variants(pos_snp, vcf):
                 df = vcf2dataframe('temp.vcf', info_level=False, UID=True, genotype_level=False)
                 uid = "{}-{}".format(pos, snp)
                 variants = multi2bi(df) # get all variants present in df
+                #variants = df.index.tolist()
 
                 if uid in variants:
                     result.pop(result.index((pos, snp)))
@@ -90,7 +91,7 @@ def multi2bi(df):
             multi = re.split('[,/]', variant)
             bi = ["/".join((multi[0], x)) for x in multi[1:]]
             
-            # result.pop(result.index(variant)) # Removes multi-allelic variant from list
+            result.pop(result.index(variant)) # Removes multi-allelic variant from list
             result = result + bi
 
     return result

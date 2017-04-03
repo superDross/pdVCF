@@ -80,7 +80,7 @@ class VCF(object):
         return self.vcf
 
 
-    def filter_vcf(self, cond_list, op, how='all'):
+    def filter_vcf(self, cond_list, op="&", how='all'):
         ''' Filter out variants in the VCF that do not meet
             the given conditions.
 

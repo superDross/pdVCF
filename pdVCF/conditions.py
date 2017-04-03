@@ -43,11 +43,11 @@ def create_condition(vcf, string):
     op = ops[op_sign]
     # get the cross section of all columns with the given field
     all_fields = vcf.xs(field, axis=1, level=1)
-    # convert to digits to numeric type
-    if val.isdigit():
+    # convert digits to numeric type. replace needed for identifying floats
+    if val.replace("0.", "").isdigit():   
         all_fields = all_fields.apply(pd.to_numeric) 
         all_fields = all_fields.fillna(0)
-        val = int(val)
+        val = float(val)
     # apply the operator function to the cross sectioned vcf against the given value
     cond = op(all_fields, val)
     

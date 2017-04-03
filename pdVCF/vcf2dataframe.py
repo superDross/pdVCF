@@ -56,7 +56,6 @@ def vcf2dataframe(filename, genotype_level=True, info_level=True, UID=False):
     
     # replace empty cells and drop FORMAT field
     df = df.replace("", np.nan)
-    df = df.drop('FORMAT', axis=1)
     
     return df
 
