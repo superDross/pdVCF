@@ -5,6 +5,7 @@ from pdVCF.vcf2dataframe import vcf2dataframe
 import os
 import re
 
+
 def common_variants(vcf1, vcf2):
     ''' Find common variants between two VCF objects
         and return common variants in a list.
