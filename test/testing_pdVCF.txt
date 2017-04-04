@@ -1,5 +1,6 @@
 Testing pdVCF
 
+
 # filter a multi-sample VCF (var.bothTAADUKJan) for variants where at least one sample for said variant has a DP > 50 and GQ > 40
 
 >  vcffilterjs -e 'function accept(v) { var  i=0;for(i=0;i< v.getNSamples();++i) {var g=v.getGenotype(i);if(g.hasDP() && g.hasGQ() && g.getDP()>50 && g.getGQ()>40) return true;} return false;}accept(variant);'  input.vcf
@@ -10,3 +11,55 @@ Testing pdVCF
 
 
 
+
+
+
+
+### Testing against vcfhacks filtering by minDP 50 and minAB 0.3
+
+# time = ~1 minutes
+filterGts.pl -i var.both.taadUkJan2017.filters.vcf -d 50 -a 0.3  -p -o out.vcf
+grep "0/1\|1/1" out.vcf | wc -l # 914
+
+# time ~36 seconds
+VCF('var.both....vcf').filter_vcf(['AB >= 0.3', 'DP >= 50'], op='&', how='any') # 867
+
+
+
+
+
+
+
+
+## Getting variants not in dbSNP with AB > 0.3
+# VCFHACKS
+
+# filter for minDP 50 and minAB 0.3 
+filterGts.pl -i var.both.taadUkJan2017.filters.vcf -d 50 -a 0.3  -p -o out.vcf # 914 
+
+# filter for minGQ 30
+vcftools --minGQ 30 --vcf out.vcf --recode --out out
+
+# number filtered variants 
+grep "0/1\|1/1" out.recode.vcf |wc -l # 861
+
+# number of filtered variants NOT in dbSNP
+grep "0/1\|1/1" out.recode.vcf  | awk '{print $3'}'  | sed '/^rs/d' | wc -l # 181
+
+# Percentage not in dbSNP (ALMOST THE SAME AS MY METHOD)
+21.02% (181/861 * 10)
+
+
+
+
+# PDVCF
+over = VCF(var.both....)
+
+# filter 
+over.filter_vcf(['DP >= 50', 'GQ >= 30',  'AB > 0.3', 'GT != 0/0', 'GT != ./.'], op='&', how='any') # 856
+
+# get those NOT in dbSNP
+over.vcf[over.vcf['ID'] == '.'].shape[0] / len(over.vcf) # 178
+
+# Percantage not in dbSNP
+20.8% (178/856*100)
