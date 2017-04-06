@@ -138,10 +138,17 @@ def get_genotype_data(df):
     remain = pd.DataFrame(data=df[normal].values,
                           columns=pd.MultiIndex.from_tuples(
                             [(x, '') for x in normal] ))
+    
 
     # list of dataframes where every sample has sub columns for each genotype info
-    sams = [pd.DataFrame(data=list(df[col].str.split(':').dropna()),
+    sams = [pd.DataFrame(data=[
+                                # if all samples gentopes are './.' this fills it with 0
+                                [x[0], '0', '0', '0', '0'] if len(x) == 1 else x
+                                for x in list(df[col].str.split(':').dropna())
+                              ],
+
                          columns=pd.MultiIndex.from_product([ [col], form ]))
+
             for col in samples]
     
     # add allele balance to sample genotype information
@@ -165,13 +172,13 @@ def calc_AB(vcf):
         ONLY WORKS FOR BIALLELIC VARIANTS
     '''
     sam = vcf.columns.levels[0][0]
-    vcf[sam,'DP'] = pd.to_numeric(vcf[sam,'DP'])
-    vcf[sam,'GQ'] = pd.to_numeric(vcf[sam,'GQ'])
+    vcf[sam,'DP'] = pd.to_numeric(vcf[sam,'DP'].str.replace('.', '0')) # bcftools places '.' in empty fields
+    vcf[sam,'GQ'] = pd.to_numeric(vcf[sam,'GQ'].str.replace('.', '0'))
     AD = vcf.xs('AD', level=1, axis=1).unstack().str.split(",", n=2)
     DP = vcf.xs('DP', level=1, axis=1).unstack()
     AB = round(pd.to_numeric(AD.str[1]) / pd.to_numeric(DP), 2)
     vcf[sam, 'AB'] = AB.tolist()
-        
+            
     return vcf
 
 
