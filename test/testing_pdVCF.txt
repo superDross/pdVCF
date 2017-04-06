@@ -24,7 +24,7 @@ grep "0/1\|1/1" out.vcf | wc -l # 914
 # time ~36 seconds
 VCF('var.both....vcf').filter_vcf(['AB >= 0.3', 'DP >= 50'], op='&', how='any') # 867
 
-
+# I manually checked 4 of the 47 extra variants present after filtering with vcfHacks. I couldn't find any 0/1 or 1/1 genotypes with an AB above 0.1, nevermind 0.3. This leads me to believe my method is correct.
 
 
 
