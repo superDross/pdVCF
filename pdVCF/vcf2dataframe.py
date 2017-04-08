@@ -207,8 +207,9 @@ def get_info_data(df, info_fields):
         df['INFO'] = not_present.append(present).sort_index()
 
     # reorder INFO fields so they are are all in the same order
-    df['INFO'] = df['INFO'].apply(lambda x: ';'.join(elem for elem in sorted(x.split(";"))))
-
+    # THIS ASSIGNS THE WRONG VALUES TO AN INFO COLUMN
+    #df['INFO'] = df['INFO'].apply(lambda x: ';'.join(elem for elem in sorted(x.split(";"))))
+    
     # remove all info_field names from the info values, starting with the info field with the longest name first
     unwanted = info_fields + ['=']
     unwanted.sort(key=len, reverse=True)
@@ -218,7 +219,7 @@ def get_info_data(df, info_fields):
     # create a new multi-index df containing only the info fields with the IDs as the second level
     info = pd.DataFrame(data=list(df['INFO'].str.split(';')),
                         columns=pd.MultiIndex.from_product([ ['INFO'], info_fields]))
-
+    
     if not isinstance(df.columns, pd.MultiIndex):
         # create another multi-index df without the info fields where the second level is nothing
         df = pd.DataFrame(data=df.drop('INFO', axis=1, level=0).values,
