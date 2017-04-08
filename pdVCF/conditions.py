@@ -41,8 +41,10 @@ def create_condition(vcf, string):
     field, op_sign, val = string.split(" ")
     # get the operator function that matches the op_sign
     op = ops[op_sign]
+    # if not in INFO or genotype fields, assume its in first level 
+    level = 1 if field in vcf.columns.levels[1] else 0
     # get the cross section of all columns with the given field
-    all_fields = vcf.xs(field, axis=1, level=1)
+    all_fields = vcf.xs(field, axis=1, level=level)
     # convert digits to numeric type. replace needed for identifying floats
     if val.replace("0.", "").isdigit():   
         all_fields = all_fields.apply(pd.to_numeric) 
