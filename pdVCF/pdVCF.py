@@ -90,7 +90,7 @@ class VCF(object):
             how: 'all' mean all samples for a given variant must pass the applied conditions to remain in the VCF. 'any' means at least one sample for a given variant must meet the given conditions to remain in the VCF.
 
         Notes:
-            filtering INFO and Gentotype fields must be performed seperately.
+            filtering INFO, mandatory and Gentotype fields must be performed seperately.
             does not filter multi-allelic variants.
         '''
 
