@@ -1,0 +1,13 @@
+INFO:root:0 sec - get_vcf_header()
+INFO:root:0 sec - get_info_fields()
+INFO:root:0 sec - count_comments()
+INFO:root:-------- GENOTYPE -------
+INFO:root:0.05 sec - remain
+INFO:root:3.87 sec - sams
+INFO:root:8.46 sec - AB
+INFO:root:0.37 sec - concat
+INFO:root:-------------------------------
+INFO:root:0 sec - replace_series_strings()
+INFO:root:7 sec - get_info_data()
+INFO:root:0 sec - index2UID()
+INFO:root:22 sec - vcf2dataframe()

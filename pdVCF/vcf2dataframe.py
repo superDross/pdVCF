@@ -150,7 +150,9 @@ def get_genotype_data(df):
     Args:
         df: DataFrame deriving from a VCF via vcf2dataframe()
     '''
+    logging.info("-------- GENOTYPE -------")
     start = time.time()
+
     # contain the variant columns and the sample names in seperate lists
     normal = list(df.iloc[:, :9].columns)
     samples = list(df.iloc[:, 9:].columns)
@@ -161,6 +163,8 @@ def get_genotype_data(df):
                           columns=pd.MultiIndex.from_tuples(
                             [(x, '') for x in normal] ))
     
+    logging.info("{} sec - remain".format(round(time.time()-start,2)))
+    start = time.time()
 
     # list of dataframes where every sample has sub columns for each genotype info
     sams = [pd.DataFrame(data=[
@@ -173,13 +177,21 @@ def get_genotype_data(df):
 
             for col in samples]
     
+    logging.info("{} sec - sams".format(round(time.time()-start,2)))
+    start = time.time()
+
     # add allele balance to sample genotype information
     sams = [calc_AB(sam) for sam in sams]
+    
+    logging.info("{} sec - AB".format(round(time.time()-start,2)))
+    start = time.time()
     
     # concat all dfs in the list
     df2 = pd.concat([remain] + sams, axis=1)
 
-    logging.info("{} sec - get_genotype_data()".format(round(time.time()-start),2))
+    logging.info("{} sec - concat".format(round(time.time()-start,2)))
+
+    logging.info("-------------------------------")
     return df2
 
 
