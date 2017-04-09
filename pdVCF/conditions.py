@@ -57,7 +57,7 @@ def create_condition(vcf, string):
         all_fields = all_fields.apply(lambda x: x.str.split(",").str[index])
 
     # convert digits to numeric type. replace needed for identifying floats
-    if val.replace("0.", "").isdigit():   
+    if val.replace(".", "").isdigit():   
         all_fields = all_fields.apply(pd.to_numeric) 
         all_fields = all_fields.fillna(0)
         val = float(val)

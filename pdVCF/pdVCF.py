@@ -1,5 +1,6 @@
 from pdVCF.vcf2dataframe import vcf2dataframe
 import pdVCF.conditions as cond
+import pdVCF.errors as errors
 import pandas as pd
 import re
 import operator
@@ -95,7 +96,7 @@ class VCF(object):
         '''
 
         # check for errors
-        self.check_fields(cond_list)
+        errors.check_fields(self.vcf, cond_list)
         
         # apply all conditions to the vcf
         cond_list = [cond.create_condition(self.vcf, c) for c in cond_list]
@@ -112,42 +113,6 @@ class VCF(object):
         return self.vcf
 
 
-    def check_fields(self, l):
-        ''' Ensure the given list of conditions does not apply to both
-            the INFO and genotype fields of the VCF object.
-        '''
-        fields = [x.split(" ")[0] for x in l]
-        info = self.vcf.INFO.columns.tolist() 
-        geno = ['DP', 'GT', 'AD', 'GQ', 'PL', 'AB']
-        mandatory = ['CHROM', 'POS', 'ID', 'REF', 'ALT', 'QUAL', 'FILTER']
-        
-        if len(set(fields).intersection(geno) ) > 0 and len(set(fields).intersection(info) ) > 0:
-            raise ValueError("Elements in {} are present in both the genotype and INFO fields. Filter genotype and INFO fields seperately.".format(fields))
-        
-        if len(set(fields).intersection(geno) ) > 0 and len(set(fields).intersection(mandatory) ) > 0:
-            raise ValueError("Elements in {} are present in both the genotype and mandatory fields. Filter genotype and mandatory fields seperately.".format(fields))
-
-        if len(set(fields).intersection(info) ) > 0 and len(set(fields).intersection(mandatory) ) > 0:
-            raise ValueError("Elements in {} are present in both the INFO and mandatory fields. Filter mandatory and INFO fields seperately.".format(fields))
-
-
-
-
-    def filter_flag(self, flag='PASS', include=True):
-        ''' Include or exclude variants with the given flag
-            in the VCF FILTER field.
-        Args:
-            flag: defaults to 'PASS'
-            include: include in the vcf if true, otherwise exclude
-        '''
-        if include:
-            self.vcf = self.vcf[self.vcf['FILTER'] == flag]
-        else:
-            self.vcf = self.vcf[self.vcf['FILTER'] != flag]
-    
-        return self.vcf
-        
-    
     def indels(self, include=True):
         ''' Remove or filter for indels from vcf.
         Args:
