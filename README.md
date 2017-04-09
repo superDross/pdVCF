@@ -1,6 +1,7 @@
 # pdVCF
-Manipulate a VCF file as a MultiIndexed Pandas DataFrame
+Manipulate a VCF file as a Multi-Indexed Pandas DataFrame
 
+## Filtering
 Creating a VCF object from a large vcf file (>25Mb) will consume considerable time and memory resources. It is therefore advised to perform any major filtering prior to initialisation. A secondary filtering stage can be performed after initialisation if complex filtering is required.
 
 One of the strengths of filtering via the filtering_vcf() method is its shear flexibility. For example, if one wishes to filter for variants where at least one sample in a given multi-sample vcf has an allele balance between 0.2-0.4, genotype depth above 50, alternative allele depth above 30, genotype quality above 30 and homozygous alternative genotype:
@@ -9,6 +10,12 @@ One of the strengths of filtering via the filtering_vcf() method is its shear fl
 from pdVCF.pdVCF import VCF
 example = VCF('example.vcf')
 example.filter_vcf(['AB => 0.2', 'AB <= 0.4', 'DP > 50', 'AD[1] > 30', 'GQ > 30', 'GT = 1/1'], op='&', how='any')
+```
+
+## Testing
+Perform the following command in the test directory:
+```python3
+python3 -m unittest *.py
 ```
 
 ### Example Usage
@@ -44,15 +51,10 @@ sample.vcf
 ```
 
 ## To Do
-- Testing
-  - Test filtering against vcftools
-  - Unit testing
-
 - Functionality
   - Implement proper handling of multiallelic variants. Which affects: 
     - Genotype fields: AD, AB
     - Info fields: AF, AC etc.
 
-  - Add more filtering options
   - Plotting features 
   - Method to convert back to vcf format
