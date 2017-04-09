@@ -18,6 +18,8 @@ def common_variants(vcf1, vcf2):
  
 
 
+
+# relic function that could be potentially useful in the near future
 def multi2bi(df):
     ''' Convert multi-allelic UIDs, deriving from a 
         pdVCF, in a list to bi-allelic UIDs.
