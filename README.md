@@ -51,6 +51,7 @@ sample.vcf
 ```
 
 ## To Do
+- Increase efficiency of vcf2dataframe
 - Functionality
   - Implement proper handling of multiallelic variants. Which affects: 
     - Genotype fields: AD, AB
