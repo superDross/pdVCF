@@ -2,7 +2,7 @@
 Manipulate a VCF file as a Multi-Indexed Pandas DataFrame
 
 ## Filtering
-Creating a VCF object from a large vcf file (>25Mb) will consume considerable time and memory resources. It is therefore advised to perform any major filtering prior to initialisation. A secondary filtering stage can be performed after initialisation if complex filtering is required.
+Creating a VCF object from a large vcf file (>250Mb) will consume considerable memory resources e.g. a 287Mb vcf file consumes 6Gb of memory. It is therefore advised to perform any major filtering prior to initialisation. A secondary filtering stage can be performed after initialisation if complex filtering is required. 
 
 One of the strengths of filtering via the filtering_vcf() method is its shear flexibility. For example, if one wishes to filter for variants where at least one sample in a given multi-sample vcf has an allele balance between 0.2-0.4, genotype depth above 50, alternative allele depth above 30, genotype quality above 30 and homozygous alternative genotype:
 

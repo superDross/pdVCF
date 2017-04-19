@@ -167,5 +167,6 @@ class TestUltimateFilter(unittest.TestCase):
 
         self.assertEqual(m.vcf.index.tolist(), answer)
 
-
+if __name__ == '__main__':
+    unittest.main(warnings='ignore')
 
