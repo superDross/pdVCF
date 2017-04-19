@@ -12,10 +12,12 @@ example = VCF('example.vcf')
 example.filter_vcf(['AB => 0.2', 'AB <= 0.4', 'DP > 50', 'AD[1] > 30', 'GQ > 30', 'GT = 1/1'], op='&', how='any')
 ```
 
-## Testing
-Perform the following command in the test directory:
+## Install
+To install and test pdVCF:
 ```python3
-python3 -m unittest *.py
+git clone https://github.com/superDross/pdVCF
+cd pdVCF/
+python3 pdVCF --test
 ```
 
 ### Example Usage
@@ -51,11 +53,9 @@ sample.vcf
 ```
 
 ## To Do
-- Increase efficiency of vcf2dataframe
 - Functionality
   - Implement proper handling of multiallelic variants. Which affects: 
     - Genotype fields: AD, AB
     - Info fields: AF, AC etc.
 
   - Plotting features 
-  - Method to convert back to vcf format
