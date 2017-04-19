@@ -6,10 +6,6 @@ import re
 import sys
 import os
 import collections
-import logging
-import time
-
-logging.basicConfig(filename="log_vcf_conversion.log", level=logging.DEBUG)
 
 
 # path to this %%file
@@ -36,7 +32,6 @@ def vcf2dataframe(filename, genotype_level=True, info_level=True, UID=False):
 
         INFO DP field renamed to DEPTH
     '''
-    start = time.time()
 
     if filename.endswith(".gz"):
         raise IOError("pdVCF does not support compressed VCF files.")
@@ -64,43 +59,34 @@ def vcf2dataframe(filename, genotype_level=True, info_level=True, UID=False):
     # replace empty cells and drop FORMAT field
     df = df.replace("", np.nan)
     
-    logging.info("{} sec - vcf2dataframe()".format(round(time.time()-start),2))
     return df
 
 
 def get_vcf_header(filename):
     ''' Get all header names from a given VCF file and return as a list.
     '''
-    start = time.time()
 
     with open(filename) as input_file:
         row = [x for x in input_file if not x.startswith('##')] # skip unwanted headers
         head = next(iter(row))    # generator to deal with the header line only.
         split_head = [re.sub(r'#|\n', '', x) for x in head.split("\t")]
 
-        logging.info("{} sec - get_vcf_header()".format(round(time.time()-start),2))
         return split_head
 
 
 def get_info_fields(filename):
     ''' Get all ID names in the given VCFs INFO field and return as a list.
     '''
-    start = time.time()
-
     with open(filename) as input_file:
         row = [x for x in input_file if x.startswith('##INFO')]
         info_fields = [x[11:].split(',')[0] for x in row]
         info_fields = [x.replace("DP", "DEPTH") for x in info_fields]
-        logging.info("{} sec - get_info_fields()".format(round(time.time()-start),2))
         return info_fields
-
 
 
 def count_comments(filename):
     ''' Count all lines in a given VCF file starting with #.
     '''
-    start = time.time()
-
     comments = 0
     with open(filename) as f:
         for line in f:
@@ -110,9 +96,7 @@ def count_comments(filename):
             else:
                 break
 
-    logging.info("{} sec - count_comments()".format(round(time.time()-start),2))
     return comments
-
 
 
 def replace_series_strings(df, col, dic, substring):
@@ -128,7 +112,6 @@ def replace_series_strings(df, col, dic, substring):
         entries identified as the key in the given dict
         replaced with the item in said dict
     '''
-    start = time.time()
 
     if not isinstance(substring, bool):
         raise TypeError("substring argument must equal True or False")
@@ -139,9 +122,7 @@ def replace_series_strings(df, col, dic, substring):
         elif substring is False:
             df[col] = df[col].replace(string, correction, regex=True)
 
-    logging.info("{} sec - replace_series_strings()".format(round(time.time()-start),2))
     return df
-
 
 
 def get_genotype_data(df):
@@ -150,8 +131,6 @@ def get_genotype_data(df):
     Args:
         df: DataFrame deriving from a VCF via vcf2dataframe()
     '''
-    logging.info("-------- GENOTYPE -------")
-    start = time.time()
 
     # contain the variant columns and the sample names in seperate lists
     normal = list(df.iloc[:, :9].columns)
@@ -163,8 +142,6 @@ def get_genotype_data(df):
                           columns=pd.MultiIndex.from_tuples(
                             [(x, '') for x in normal] ))
     
-    logging.info("{} sec - remain".format(round(time.time()-start,2)))
-    start = time.time()
 
     # list of dataframes where every sample has sub columns for each genotype info
     sams = [pd.DataFrame(data=[
@@ -177,23 +154,15 @@ def get_genotype_data(df):
 
             for col in samples]
     
-    logging.info("{} sec - sams".format(round(time.time()-start,2)))
-    start = time.time()
 
     # add allele balance to sample genotype information
     sams = [calc_AB(sam) for sam in sams]
     
-    logging.info("{} sec - AB".format(round(time.time()-start,2)))
-    start = time.time()
     
     # concat all dfs in the list
     df2 = pd.concat([remain] + sams, axis=1)
 
-    logging.info("{} sec - concat".format(round(time.time()-start,2)))
-
-    logging.info("-------------------------------")
     return df2
-
 
 
 def calc_AB(vcf):
@@ -217,7 +186,6 @@ def calc_AB(vcf):
     return vcf
 
 
-
 def get_info_data(df, info_fields):
     ''' Transform the INFO IDs into second level column indexes and return
         the df as a MultiIndex dataframe.
@@ -225,8 +193,6 @@ def get_info_data(df, info_fields):
         df: DataFrame deriving from a VCF via vcf2dataframe()
         info_fields: a list of all the INFO IDs in the given df
     '''
-    start = time.time()
-
     # Alter Info field for some variables that don't work well
     df['INFO'] = df['INFO'].str.replace(";DB",";DB=1")
     df['INFO'] = df['INFO'].str.replace(";STR",";STR=1")
@@ -277,17 +243,12 @@ def get_info_data(df, info_fields):
         final_df = final_df.rename(columns={'MQ0': 'TEMP', 'MQ': 'MQ0'})
         final_df = final_df.rename(columns={'TEMP': 'MQ'})
 
-
-    logging.info("{} sec - get_info_data()".format(round(time.time()-start),2))
     return final_df
-
 
 
 def index2UID(df):
     ''' Replace the index with a unique variant identifier.
     '''
-    start = time.time()
-
     UID = df['CHROM'].astype(str) + ":" + df['POS'].astype(str) + \
           "-" + df['REF'].astype(str) + "/" + df['ALT'].astype(str)
 
@@ -299,6 +260,5 @@ def index2UID(df):
     # remove UID column (UID now only accessible via index)  
     df = df.drop('UID', axis=1)
 
-    logging.info("{} sec - index2UID()".format(round(time.time()-start),2))
     return df.rename(UID)
 
