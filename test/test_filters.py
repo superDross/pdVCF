@@ -1,5 +1,8 @@
 from pdVCF.pdVCF import VCF
 import unittest
+import os
+
+here = os.path.dirname(os.path.realpath(__file__))+"/"
 # 'Tested:' within the docstring details commands it was orginally tested against and which produced the same given answer as pdVCF filtering
 
 
@@ -11,7 +14,7 @@ class TestMandatory(unittest.TestCase):
         Tested:
             SnpSift filter "( CHROM = '1') & ( POS > 2000 ) & ( POS < 2235601 )" testing2.vcf 
         '''
-        v = VCF('vcfs/testing2.vcf')
+        v = VCF(here+'vcfs/testing2.vcf')
         v.filter_vcf(['CHROM = 1', 'POS > 2000', 'POS < 2235601'])
         answer = ['1:2234385-C/T', '1:2235243-C/T', '1:2235501-A/GGT']
 
@@ -23,7 +26,7 @@ class TestMandatory(unittest.TestCase):
         Tested:
             SnpSift filter "( FILTER != 'PASS' ) & ( ALT = 'G' ) & ( QUAL > 200 )" testing2.vcf
         '''
-        v = VCF('vcfs/testing2.vcf')
+        v = VCF(here+'vcfs/testing2.vcf')
         v.filter_vcf(['FILTER != PASS', 'ALT = G', 'QUAL > 200'])
         answer = ['1:2235792-A/G']
 
@@ -38,7 +41,7 @@ class TestFilterGenotype(unittest.TestCase):
         Tested:
             SnpSift filter "( GEN[*].GT == '1/1' ) & ( GEN[*].DP > 100 )" testing.vcf
         '''
-        v = VCF('vcfs/testing.vcf')
+        v = VCF(here+'vcfs/testing.vcf')
         v.filter_vcf(['GT = 1/1', 'DP > 100'], how='any')
         answer = ['1:2235901-A/G', '1:2235501-A/GGT', '1:2239901-GA/G']
 
@@ -50,7 +53,7 @@ class TestFilterGenotype(unittest.TestCase):
         Tested:
             SnpSift filter "( GEN[*].GT == '1/1' ) & ( GEN[*].DP > 100 )" testing3.vcf | grep -v '^#' | wc -l
         '''
-        v = VCF('vcfs/testing3.vcf')
+        v = VCF(here+'vcfs/testing3.vcf')
         v.filter_vcf(['GT = 1/1', 'DP > 100'], how='any')
 
         self.assertEqual(len(v.vcf), 257)
@@ -62,7 +65,7 @@ class TestFilterGenotype(unittest.TestCase):
         Tested:
             I cannot find a tool to filter VCFs by allele balance
         '''
-        v = VCF('vcfs/testing2.vcf')
+        v = VCF(here+'vcfs/testing2.vcf')
         v.filter_vcf(['AB > 0', 'AB < 0.09'])
         answer = ['1:2239999-A/G,T']
 
@@ -78,7 +81,7 @@ class TestFilterInfo(unittest.TestCase):
         Tested:
             SnpSift filter "( DP > 100 )" testing.vcf
         '''
-        v = VCF('vcfs/testing.vcf')
+        v = VCF(here+'vcfs/testing.vcf')
         v.filter_vcf(['DEPTH > 100'])
         answer = ['1:2234385-C/T', '1:2239999-A/G,T']
 
@@ -90,7 +93,7 @@ class TestFilterInfo(unittest.TestCase):
         Tested:
             SnpSift filter "( AF[0] < 0.1 ) & ( AC[0] > 2 )" testing2.vcf 
         '''
-        v = VCF('vcfs/testing2.vcf')
+        v = VCF(here+'vcfs/testing2.vcf')
         v.filter_vcf(['AF[0] < 0.1', 'AC[0] > 2'])
         answer = ['1:2235901-A/G']
 
@@ -102,7 +105,7 @@ class TestFilterInfo(unittest.TestCase):
         Tested:
             SnpSift filter "( MEOW != 'ON' )" testing2.vcf 
         '''
-        v = VCF('vcfs/testing2.vcf')
+        v = VCF(here+'vcfs/testing2.vcf')
         v.filter_vcf(['MEOW != ON'])
         answer = ['1:2234385-C/T', '1:2235901-A/G', '1:2235501-A/GGT']
 
@@ -117,7 +120,7 @@ class TestFilterArgs(unittest.TestCase):
         Tested:
             SnpSift filter "( GEN[?].DP >= 50 ) & ( GEN[?].GQ >= 30 ) " testing.vcf
         '''
-        v = VCF('vcfs/testing.vcf')
+        v = VCF(here+'vcfs/testing.vcf')
         v.filter_vcf(['DP >= 50', 'GQ >= 30'], op='&', how='all')
         answer = ['1:2235792-A/G']
 
@@ -129,7 +132,7 @@ class TestFilterArgs(unittest.TestCase):
         Tested:
             SnpSift filter "( GEN[*].DP >= 50 ) & ( GEN[*].GQ >= 30 ) " testing.vcf
         '''
-        v = VCF('vcfs/testing.vcf')
+        v = VCF(here+'vcfs/testing.vcf')
         v.filter_vcf(['DP >= 50', 'GQ >= 30'], op='&', how='any')
         answer = ['1:2235243-C/T', '1:2235792-A/G', '1:2235901-A/G', 
                   '1:2239999-A/G,T', '1:2235501-A/GGT', '1:2239901-GA/G']
@@ -142,7 +145,7 @@ class TestFilterArgs(unittest.TestCase):
         Tested:
             SnpSift filter "( MEOW != 'ON' ) | ( LOLZ > 200 )" testing2.vcf
         '''
-        v = VCF('vcfs/testing2.vcf')
+        v = VCF(here+'vcfs/testing2.vcf')
         v.filter_vcf(['MEOW != ON', 'LOLZ > 200'], op="|")
         answer = ['1:2234385-C/T', '1:2235901-A/G', '1:2239999-A/G,T', '1:2235501-A/GGT']
 
@@ -157,7 +160,7 @@ class TestUltimateFilter(unittest.TestCase):
         Tested:
          SnpSift filter "( GEN[*].GT == '0/1' ) & ( GEN[*].DP >= 50 ) & ( GEN[*].GQ >= 30 ) & ( AC[0] > 20 ) & ( CHROM = '1' ) & ( POS > 2235893 ) & ( ID =~ 'rs' )" testing3.vcf
         '''
-        m = VCF('vcfs/testing3.vcf')
+        m = VCF(here+'vcfs/testing3.vcf')
         m.filter_vcf(['GT = 0/1', 'DP >= 50', 'GQ >= 30'])
         m.filter_vcf(['AC[0] > 20'])
         m.filter_vcf(['CHROM = 1', 'POS > 2235893', 'ID != .'])

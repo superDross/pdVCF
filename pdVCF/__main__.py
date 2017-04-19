@@ -9,7 +9,6 @@ def get_parser():
     parser.add_argument('--version', action='store_true', help='display the current version')
     parser.add_argument('--test', action='store_true', help='test installation')
     parser.add_argument('--optimise', action='store_true', help='optimise pdVCF usng line_profiler')
-    parser.add_argument('-a')
     return parser
 
 def cli():
@@ -34,8 +33,6 @@ def cli():
         subprocess.call(['sed', '-i', 's/@profile//g', f])
         subprocess.call(['rm', f+'.lprof'])
 
-    if args['a']:
-        subprocess.call(['ls', '/home/david/'])
 
 if __name__ == '__main__':
     cli()
