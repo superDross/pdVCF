@@ -3,7 +3,6 @@ import pdVCF.conditions as cond
 import pdVCF.errors as errors
 import pandas as pd
 import re
-import operator
 
 pd.set_option('display.max_columns', 500)
 pd.set_option('display.max_colwidth', -1)
@@ -80,7 +79,7 @@ class VCF(object):
         self.vcf = sub.drop(uncalled)
         return self.vcf
 
-
+    
     def filter_vcf(self, cond_list, op="&", how='any'):
         ''' Filter out variants in the VCF that do not meet
             the given conditions.
@@ -213,4 +212,4 @@ class VCF(object):
         else:
             return pos
         
-        
+

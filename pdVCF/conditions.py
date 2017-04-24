@@ -3,7 +3,6 @@
 import pandas as pd
 from functools import reduce
 import operator
-import re
 
 ops = { 
     
@@ -68,8 +67,6 @@ def create_condition(vcf, string):
     return cond
     
 
-
-
 def combine_conditions(cond_list, op):
     ''' Combine a list of conditions with the given
         operator.
@@ -82,4 +79,5 @@ def combine_conditions(cond_list, op):
     op_func = ops[op]
     combined = reduce(lambda x,y: op_func(x, y), cond_list)
     return combined
+
 

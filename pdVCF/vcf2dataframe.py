@@ -140,7 +140,7 @@ def get_genotype_data(df):
     # These columns remain the same
     remain = pd.DataFrame(data=df[normal].values,
                           columns=pd.MultiIndex.from_tuples(
-                            [(x, '') for x in normal] ))
+                            [(x, '') for x in normal]))
     
 
     # list of dataframes where every sample has sub columns for each genotype info
@@ -150,7 +150,7 @@ def get_genotype_data(df):
                                 for x in list(df[col].str.split(':').dropna())
                               ],
 
-                         columns=pd.MultiIndex.from_product([ [col], form ]))
+                         columns=pd.MultiIndex.from_product([[col], form]))
 
             for col in samples]
     

@@ -1,4 +1,3 @@
-import vcf2dataframe
 import argparse
 import subprocess
 import os
@@ -18,7 +17,7 @@ def cli():
         return
 
     if args['version']:
-        print(__version__)
+        print('pdVCF 0.1')
         return
 
     if args['optimise']:
@@ -51,6 +50,7 @@ def activate_line_profiler():
     subprocess.call(['sed', '-i', '$d', f])
     os.remove(f.split("/")[-1] + '.lprof')
     return 
+
 
 if __name__ == '__main__':
     cli()

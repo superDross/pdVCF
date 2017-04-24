@@ -1,10 +1,6 @@
 ''' A collection of functions used to compare VCF objects
 '''
-from plumbum.cmd import tabix
-from pdVCF.vcf2dataframe import vcf2dataframe
-import os
 import re
-
 
 def common_variants(vcf1, vcf2):
     ''' Find common variants between two VCF objects
@@ -16,8 +12,6 @@ def common_variants(vcf1, vcf2):
     return list(set.intersection(set(vcf1.vcf.index.values), 
                                  set(vcf2.vcf.index.values)))    
  
-
-
 
 # relic function that could be potentially useful in the near future
 def multi2bi(df):

@@ -17,7 +17,7 @@ To install and test pdVCF:
 ```python3
 git clone https://github.com/superDross/pdVCF
 cd pdVCF/
-python3 pdVCF --test
+python pdVCF --test
 ```
 
 ### Example Usage
