@@ -1,6 +1,7 @@
 from pdVCF.vcf2dataframe import vcf2dataframe
 import pdVCF.conditions as cond
 import pdVCF.errors as errors
+from pdVCF.vcfPlots import Plot
 import pandas as pd
 import re
 
@@ -112,6 +113,11 @@ class VCF(object):
         return self.vcf
 
 
+    @property
+    def plot(self):
+        return Plot(self.vcf)
+
+
     def indels(self, include=True):
         ''' Remove or filter for indels from vcf.
         Args:
@@ -187,6 +193,13 @@ class VCF(object):
         else:
             self.vcf = self.vcf[self.vcf['CHROM'] != chrom]
 
+        return self.vcf
+
+    
+    def remove_scaffolds(self):
+        ''' Remove scaffolding chromosomes from vcf.
+        '''
+        self.vcf = self.vcf[~self.vcf.CHROM.str.contains('^GL|^KI|^hs')]
         return self.vcf
 
 

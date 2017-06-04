@@ -46,7 +46,6 @@ def vcf2dataframe(filename, genotype_level=True, info_level=True, UID=False):
     # Return a simple dataframe representative of the VCF data.
     df = pd.read_table(filename, skiprows=comments,
                        names=VCF_HEADER, usecols=range(len(VCF_HEADER)))
-
     if genotype_level:
         df = get_genotype_data(df)
 
