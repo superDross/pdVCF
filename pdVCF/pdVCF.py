@@ -1,7 +1,7 @@
-from pdVCF.vcf2dataframe import vcf2dataframe
+from .vcf2dataframe import vcf2dataframe
+from .Plots import Plot
 import pdVCF.conditions as cond
 import pdVCF.errors as errors
-from pdVCF.vcfPlots import Plot
 import pandas as pd
 import re
 
@@ -9,78 +9,14 @@ pd.set_option('display.max_columns', 500)
 pd.set_option('display.max_colwidth', -1)
 
 
-class VCF(object):
-    ''' A VCF file stored as a Pandas DataFrame
-    
-    Atrributes:
-        vcf: vcf file to be converted to a Pandas DataFrame or a VCF object
-        genotype_level: place the genotype information into a second level column index
-        info_level: place the info IDs into a second level column index
-        UID: rename index to a unique variant identifier
-        
-    Notes:
-        it is not recommended to alter the boolean attributes when initilising
-        a VCF object, as it may break method functionality and limit data 
-        manipulation of the resulting object.
+class Filter(object):
+    '''
     '''
     def __init__(self, vcf, genotype_level=True, info_level=True, UID=True):
         
         self.vcf = vcf2dataframe(vcf, genotype_level=genotype_level,
                                  info_level=info_level, UID=UID)
 
-
-    def get_samples(self):
-        ''' Get all sample names within the vcf and return as a list
-        '''
-        return self.vcf.xs('DP', level=1, axis=1).columns.tolist()
-
-
-    def get_genotype(self, gen):
-        ''' Access specific genotype information across samples
-            in the vcf.
-        Args:
-            gen: genotype attribute of interest in string format e.g 'DP'
-        '''
-        return self.vcf.xs(gen, level=1, axis=1)
-
-    
-    def get_info(self, info):
-        ''' Return INFO field of interest e.g. 'AC'
-        '''
-        return self.vcf['INFO'][info]
-
-
-    def subset(self, sams, exclude_ref=False, remove_uncalled=True):
-        ''' Subset a multisample VCF by a given sample(s).
-        Args:
-            vcf: Pandas DataFrame VCF
-            sams: list of samples to subset the vcf for
-            exlude_ref: remove variant if all GT values for subset are 0/0
-            remove_uncalled: remove variant if all GT values for subset are ./.
-
-        Returns:
-            subsetted Pandas DataFrame VCF
-        '''
-        # split variant and genotype information 
-        sams = sams if isinstance(sams, list) else [sams]
-        genotype = self.vcf[sams]
-        num_info = self.vcf['INFO'].columns.shape[0]
-        variant = self.vcf.ix[:,:8+num_info]
-
-        GT = genotype.xs('GT', level=1, axis=1)
-        uncalled= []
-
-        if remove_uncalled:
-            uncalled = GT[GT[sams] == './.'].dropna().index.tolist() 
-
-        if exclude_ref:
-            uncalled += GT[GT[sams] == '0/0'].dropna().index.tolist() 
-
-        sub = pd.concat([variant, genotype], axis=1)
-        self.vcf = sub.drop(uncalled)
-        return self.vcf
-
-    
     def filter_vcf(self, cond_list, op="&", how='any'):
         ''' Filter out variants in the VCF that do not meet
             the given conditions.
@@ -113,9 +49,35 @@ class VCF(object):
         return self.vcf
 
 
-    @property
-    def plot(self):
-        return Plot(self.vcf)
+    def subset(self, sams, exclude_ref=False, remove_uncalled=True):
+        ''' Subset a multisample VCF by a given sample(s).
+        Args:
+            vcf: Pandas DataFrame VCF
+            sams: list of samples to subset the vcf for
+            exlude_ref: remove variant if all GT values for subset are 0/0
+            remove_uncalled: remove variant if all GT values for subset are ./.
+
+        Returns:
+            subsetted Pandas DataFrame VCF
+        '''
+        # split variant and genotype information 
+        sams = sams if isinstance(sams, list) else [sams]
+        genotype = self.vcf[sams]
+        num_info = self.vcf['INFO'].columns.shape[0]
+        variant = self.vcf.ix[:,:8+num_info]
+
+        GT = genotype.xs('GT', level=1, axis=1)
+        uncalled= []
+
+        if remove_uncalled:
+            uncalled = GT[GT[sams] == './.'].dropna().index.tolist() 
+
+        if exclude_ref:
+            uncalled += GT[GT[sams] == '0/0'].dropna().index.tolist() 
+
+        sub = pd.concat([variant, genotype], axis=1)
+        self.vcf = sub.drop(uncalled)
+        return self.vcf
 
 
     def indels(self, include=True):
@@ -226,3 +188,47 @@ class VCF(object):
             return pos
         
 
+
+class VCF(Filter):
+    ''' A VCF file stored as a Pandas DataFrame
+    
+    Atrributes:
+        vcf: vcf file to be converted to a Pandas DataFrame or a VCF object
+        genotype_level: place the genotype information into a second level column index
+        info_level: place the info IDs into a second level column index
+        UID: rename index to a unique variant identifier
+        
+    Notes:
+        it is not recommended to alter the boolean attributes when initilising
+        a VCF object, as it may break method functionality and limit data 
+        manipulation of the resulting object.
+    '''
+    def __init__(self, vcf, genotype_level=True, info_level=True, UID=True):
+        Filter.__init__(self, vcf, genotype_level, info_level, UID)        
+
+    @property
+    def plot(self):
+        ''' Gives VCF object access to Plot methods.
+        '''
+        return Plot(self)
+
+    def get_samples(self):
+        ''' Get all sample names within the vcf and return as a list
+        '''
+        return self.vcf.xs('DP', level=1, axis=1).columns.tolist()
+
+    def get_genotype(self, gen):
+        ''' Access specific genotype information across samples
+            in the vcf.
+        Args:
+            gen: genotype attribute of interest in string format e.g 'DP'
+        '''
+        return self.vcf.xs(gen, level=1, axis=1)
+
+    def get_info(self, info):
+        ''' Return INFO field of interest e.g. 'AC'
+        '''
+        return self.vcf['INFO'][info]
+
+
+ 
