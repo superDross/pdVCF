@@ -9,22 +9,25 @@ pd.set_option('display.max_columns', 500)
 pd.set_option('display.max_colwidth', -1)
 
 
-class Filter(object):
-    '''
-    '''
+class VcfFilter(object):
+    ''' A vcf file stored as a Pandas DataFrame which can readily filtered
+        and manipulated.
+   '''
     def __init__(self, vcf, genotype_level=True, info_level=True, UID=True):
         
         self.vcf = vcf2dataframe(vcf, genotype_level=genotype_level,
                                  info_level=info_level, UID=UID)
 
     def filter_vcf(self, cond_list, op="&", how='any'):
-        ''' Filter out variants in the VCF that do not meet
+        ''' VcfFilter out variants in the Vcf that do not meet
             the given conditions.
 
         Args:
             cond_list: list of conditions to be met e.g ['DP >= 50', 'AB < 0.3']
             op: opertor to apply to cond_list e.g. "&" means all conditions in cnd_ist must be met
-            how: 'all' mean all samples for a given variant must pass the applied conditions to remain in the VCF. 'any' means at least one sample for a given variant must meet the given conditions to remain in the VCF.
+            how: 'all' mean all samples for a given variant must pass the applied conditions to 
+                 remain in the Vcf. 'any' means at least one sample for a given variant must meet 
+                 the given conditions to remain in the Vcf.
 
         Notes:
             filtering INFO, mandatory and Gentotype fields must be performed seperately.
@@ -50,15 +53,15 @@ class Filter(object):
 
 
     def subset(self, sams, exclude_ref=False, remove_uncalled=True):
-        ''' Subset a multisample VCF by a given sample(s).
+        ''' Subset a multisample Vcf by a given sample(s).
         Args:
-            vcf: Pandas DataFrame VCF
+            vcf: Pandas DataFrame Vcf
             sams: list of samples to subset the vcf for
             exlude_ref: remove variant if all GT values for subset are 0/0
             remove_uncalled: remove variant if all GT values for subset are ./.
 
         Returns:
-            subsetted Pandas DataFrame VCF
+            subsetted Pandas DataFrame Vcf
         '''
         # split variant and genotype information 
         sams = sams if isinstance(sams, list) else [sams]
@@ -97,14 +100,14 @@ class Filter(object):
     
 
     def biallelic(self):
-        ''' Filter for biallelic variants only.
+        ''' VcfFilter for biallelic variants only.
         '''
         self.vcf = self.vcf[self.vcf.ALT.str.split(',').str.len() == 1]
         return self.vcf
     
     
     def multiallelic(self):
-        ''' Filter for multiallelic variants only.
+        ''' VcfFilter for multiallelic variants only.
         '''
         self.vcf = self.vcf[self.vcf.ALT.str.split(',').str.len() > 1]
         return self.vcf
@@ -171,7 +174,7 @@ class Filter(object):
             order.
         '''
         convert = lambda text: int(text) if text.isdigit() else text.lower() 
-        alphanum_key = lambda key: [ convert(c) for c in re.split('([0-9]+)', key) ] 
+        alphanum_key = lambda key: [convert(c) for c in re.split('([0-9]+)', key)] 
         return sorted(l, key = alphanum_key)
     
     
@@ -186,31 +189,14 @@ class Filter(object):
             return pos
         else:
             return pos
-        
 
 
-class VCF(Filter):
-    ''' A VCF file stored as a Pandas DataFrame
-    
-    Atrributes:
-        vcf: vcf file to be converted to a Pandas DataFrame or a VCF object
-        genotype_level: place the genotype information into a second level column index
-        info_level: place the info IDs into a second level column index
-        UID: rename index to a unique variant identifier
-        
-    Notes:
-        it is not recommended to alter the boolean attributes when initilising
-        a VCF object, as it may break method functionality and limit data 
-        manipulation of the resulting object.
+class VcfView(VcfFilter):
+    ''' A vcf file stored as a Pandas DataFrame which can
+        be viewed using the below methods.
     '''
     def __init__(self, vcf, genotype_level=True, info_level=True, UID=True):
-        Filter.__init__(self, vcf, genotype_level, info_level, UID)        
-
-    @property
-    def plot(self):
-        ''' Gives VCF object access to Plot methods.
-        '''
-        return Plot(self)
+        VcfFilter.__init__(self, vcf, genotype_level, info_level, UID)        
 
     def get_samples(self):
         ''' Get all sample names within the vcf and return as a list
@@ -231,4 +217,28 @@ class VCF(Filter):
         return self.vcf['INFO'][info]
 
 
+class Vcf(VcfView):
+    ''' A vcf file stored as a Pandas DataFrame which can readily viewed,
+        filtered and plotted.
+    
+    Atrributes:
+        vcf: vcf file to be converted to a Pandas DataFrame or a Vcf object
+        genotype_level: place the genotype information into a second level column index
+        info_level: place the info IDs into a second level column index
+        UID: rename index to a unique variant identifier
+        
+    Notes:
+        it is not recommended to alter the boolean attributes when initilising
+        a Vcf object, as it may break method functionality and limit data 
+        manipulation of the resulting object.
  
+    '''
+    def __init__(self, vcf, genotype_level=True, info_level=True, UID=True):
+        VcfView.__init__(self, vcf, genotype_level, info_level, UID)        
+
+    @property
+    def plot(self):
+        ''' Gives Vcf object access to Plot methods.
+        '''
+        return Plot(self)
+

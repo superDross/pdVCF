@@ -1,4 +1,4 @@
-''' A collection of functions used to compare VCF objects
+''' A collection of functions used to compare Vcf objects
 '''
 import re
 

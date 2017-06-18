@@ -1,4 +1,4 @@
-''' Manipulate Multi-Sample VCF files in Pandas (Python3). 
+''' Manipulate Multi-Sample vcf files in Pandas (Python3). 
 '''
 import pandas as pd
 import numpy as np
@@ -19,7 +19,7 @@ pd.set_option('display.max_colwidth', -1)
 
 
 def vcf2dataframe(filename, genotype_level=True, info_level=True, UID=False):
-    '''Open a VCF file and returns a MultiIndex pandas.DataFrame.
+    '''Open a vcf file and returns a MultiIndex pandas.DataFrame.
     Args:
         filename: vcf file to be converted to a dataframe
         genotype_level: place the genotype information into a second level column index
@@ -34,18 +34,18 @@ def vcf2dataframe(filename, genotype_level=True, info_level=True, UID=False):
     '''
 
     if filename.endswith(".gz"):
-        raise IOError("pdVCF does not support compressed VCF files.")
+        raise IOError("pdVCF does not support compressed vcf files.")
 
     # get INFO fields and Headers as lists
-    VCF_HEADER = get_vcf_header(filename)
+    vcf_HEADER = get_vcf_header(filename)
     INFO_FIELDS = get_info_fields(filename)
 
     # Count how many comment lines should be skipped.
     comments = count_comments(filename)
 
-    # Return a simple dataframe representative of the VCF data.
+    # Return a simple dataframe representative of the vcf data.
     df = pd.read_table(filename, skiprows=comments,
-                       names=VCF_HEADER, usecols=range(len(VCF_HEADER)))
+                       names=vcf_HEADER, usecols=range(len(vcf_HEADER)))
     if genotype_level:
         df = get_genotype_data(df)
 
@@ -62,7 +62,7 @@ def vcf2dataframe(filename, genotype_level=True, info_level=True, UID=False):
 
 
 def get_vcf_header(filename):
-    ''' Get all header names from a given VCF file and return as a list.
+    ''' Get all header names from a given vcf file and return as a list.
     '''
 
     with open(filename) as input_file:
@@ -74,7 +74,7 @@ def get_vcf_header(filename):
 
 
 def get_info_fields(filename):
-    ''' Get all ID names in the given VCFs INFO field and return as a list.
+    ''' Get all ID names in the given vcfs INFO field and return as a list.
     '''
     with open(filename) as input_file:
         row = [x for x in input_file if x.startswith('##INFO')]
@@ -84,7 +84,7 @@ def get_info_fields(filename):
 
 
 def count_comments(filename):
-    ''' Count all lines in a given VCF file starting with #.
+    ''' Count all lines in a given vcf file starting with #.
     '''
     comments = 0
     with open(filename) as f:
@@ -128,7 +128,7 @@ def get_genotype_data(df):
     ''' Give each sample column a second level column for every field
         detailed in the FORMAT column and return as a MultIndex dataframe.
     Args:
-        df: DataFrame deriving from a VCF via vcf2dataframe()
+        df: DataFrame deriving from a vcf via vcf2dataframe()
     '''
 
     # contain the variant columns and the sample names in seperate lists
@@ -189,7 +189,7 @@ def get_info_data(df, info_fields):
     ''' Transform the INFO IDs into second level column indexes and return
         the df as a MultiIndex dataframe.
     Args:
-        df: DataFrame deriving from a VCF via vcf2dataframe()
+        df: DataFrame deriving from a vcf via vcf2dataframe()
         info_fields: a list of all the INFO IDs in the given df
     '''
     # Alter Info field for some variables that don't work well

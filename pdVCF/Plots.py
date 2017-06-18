@@ -3,10 +3,10 @@ import seaborn as sns
 import copy
 
 class Plot(object):
-    ''' Create plots from a VCF object.
+    ''' Create plots from a Vcf object.
 
     Attributes:
-        pdvcf: VCF object
+        pdvcf: Vcf object
 
     Note:
         deepcopy is used so filtering doesn't 
