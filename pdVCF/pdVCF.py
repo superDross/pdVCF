@@ -206,7 +206,8 @@ class Filter(VcfData):
     def remove_scaffolds(self):
         ''' Remove scaffolding chromosomes from vcf.
         '''
-        self.vcf = self.vcf[~self.vcf.CHROM.str.contains('^GL|^KI|^hs')]
+        if self.vcf.CHROM.dtype != int:
+            self.vcf = self.vcf[~self.vcf.CHROM.str.contains('^GL|^KI|^hs')]
         return self.vcf
 
 
