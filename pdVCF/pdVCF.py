@@ -9,14 +9,56 @@ pd.set_option('display.max_columns', 500)
 pd.set_option('display.max_colwidth', -1)
 
 
-class VcfFilter(object):
+class VcfData(object):
     ''' A vcf file stored as a Pandas DataFrame which can readily filtered
         and manipulated.
+    
+    Atrributes:
+        vcf: vcf file to be converted to a Pandas DataFrame or a Vcf object
+        genotype_level: place the genotype information into a second level column index
+        info_level: place the info IDs into a second level column index
+        UID: rename index to a unique variant identifier
+        
+    Notes:
+        it is not recommended to alter the boolean attributes when initilising
+        a Vcf object, as it may break method functionality and limit data 
+        manipulation of the resulting object.
+ 
    '''
     def __init__(self, vcf, genotype_level=True, info_level=True, UID=True):
         
         self.vcf = vcf2dataframe(vcf, genotype_level=genotype_level,
                                  info_level=info_level, UID=UID)
+
+    @staticmethod
+    def natural_sort(l): 
+        ''' Sort a list in human natural alphanumerical
+            order.
+        '''
+        convert = lambda text: int(text) if text.isdigit() else text.lower() 
+        alphanum_key = lambda key: [convert(c) for c in re.split('([0-9]+)', key)] 
+        return sorted(l, key = alphanum_key)
+    
+    
+    @staticmethod
+    def pos2range(pos, num=0): 
+        ''' Alter a genomic position to a genomic range
+            e.g. 2:1234 becomes 2:1234-1234
+        '''
+        if "-" not in pos:
+            split = pos.split(":")
+            pos = "{}:{}-{}".format(split[0], split[1], int(split[1])+num)
+            return pos
+        else:
+            return pos
+
+
+
+class Filter(VcfData):
+    ''' Allows one to filter VcfData object
+    '''
+    def __init__(self, *args, **kwargs):
+        VcfData.__init__(self, *args, **kwargs)
 
     def filter_vcf(self, cond_list, op="&", how='any'):
         ''' VcfFilter out variants in the Vcf that do not meet
@@ -168,35 +210,14 @@ class VcfFilter(object):
         return self.vcf
 
 
-    @staticmethod
-    def natural_sort(l): 
-        ''' Sort a list in human natural alphanumerical
-            order.
-        '''
-        convert = lambda text: int(text) if text.isdigit() else text.lower() 
-        alphanum_key = lambda key: [convert(c) for c in re.split('([0-9]+)', key)] 
-        return sorted(l, key = alphanum_key)
-    
-    
-    @staticmethod
-    def pos2range(pos, num=0): 
-        ''' Alter a genomic position to a genomic range
-            e.g. 2:1234 becomes 2:1234-1234
-        '''
-        if "-" not in pos:
-            split = pos.split(":")
-            pos = "{}:{}-{}".format(split[0], split[1], int(split[1])+num)
-            return pos
-        else:
-            return pos
 
-
-class VcfView(VcfFilter):
+class View(VcfData):
     ''' A vcf file stored as a Pandas DataFrame which can
         be viewed using the below methods.
     '''
-    def __init__(self, vcf, genotype_level=True, info_level=True, UID=True):
-        VcfFilter.__init__(self, vcf, genotype_level, info_level, UID)        
+    def __init__(self, *args, **kwargs):
+        VcfData.__init__(self, *args, **kwargs)
+
 
     def get_samples(self):
         ''' Get all sample names within the vcf and return as a list
@@ -217,24 +238,13 @@ class VcfView(VcfFilter):
         return self.vcf['INFO'][info]
 
 
-class Vcf(VcfView):
+
+class Vcf(View, Filter):
     ''' A vcf file stored as a Pandas DataFrame which can readily viewed,
         filtered and plotted.
-    
-    Atrributes:
-        vcf: vcf file to be converted to a Pandas DataFrame or a Vcf object
-        genotype_level: place the genotype information into a second level column index
-        info_level: place the info IDs into a second level column index
-        UID: rename index to a unique variant identifier
-        
-    Notes:
-        it is not recommended to alter the boolean attributes when initilising
-        a Vcf object, as it may break method functionality and limit data 
-        manipulation of the resulting object.
- 
     '''
-    def __init__(self, vcf, genotype_level=True, info_level=True, UID=True):
-        VcfView.__init__(self, vcf, genotype_level, info_level, UID)        
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
     @property
     def plot(self):

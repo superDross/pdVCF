@@ -1,14 +1,14 @@
 # pdVCF
-Manipulate a VCF file as a Multi-Indexed Pandas DataFrame
+Manipulate a vcf file as a Multi-Indexed Pandas DataFrame
 
 ## Filtering
-Creating a VCF object from a large vcf file (>250Mb) will consume considerable memory resources e.g. a 287Mb vcf file consumes 6Gb of memory. It is therefore advised to perform any major filtering prior to initialisation. A secondary filtering stage can be performed after initialisation if complex filtering is required. 
+Creating a Vcf object from a large vcf file (>250Mb) will consume considerable memory resources e.g. a 287Mb vcf file consumes 6Gb of memory. It is therefore advised to perform any major filtering prior to initialisation. A secondary filtering stage can be performed after initialisation if complex filtering is required. 
 
 One of the strengths of filtering via the filtering_vcf() method is its shear flexibility. For example, if one wishes to filter for variants where at least one sample in a given multi-sample vcf has an allele balance between 0.2-0.4, genotype depth above 50, alternative allele depth above 30, genotype quality above 30 and homozygous alternative genotype:
 
 ```python3
-from pdVCF.pdVCF import VCF
-example = VCF('example.vcf')
+from pdVCF.pdVCF import Vcf
+example = Vcf('example.vcf')
 example.filter_vcf(['AB => 0.2', 'AB <= 0.4', 'DP > 50', 'AD[1] > 30', 'GQ > 30', 'GT = 1/1'], op='&', how='any')
 ```
 
@@ -22,12 +22,12 @@ python pdVCF --test
 
 ### Example Usage
 ```python3
-from pdVCF.pdVCF import VCF
+from pdVCF.pdVCF import Vcf
 
-# create a VCF object 
-sample = VCF("sample.vcf")
+# create a Vcf object 
+sample = Vcf("sample.vcf")
 
-# filter the vcf for variants with a minimum DP of 50 & GQ of 30 across all samples in the VCF object
+# filter the vcf for variants with a minimum DP of 50 & GQ of 30 across all samples in the Vcf object
 sample.filter_vcf(['DP >= 50', 'GQ >= 30'], op='&', how='all')
 
 # further filter for variants where any single sample has an allele balance (alt/(alt+ref)) between 0-0.3 

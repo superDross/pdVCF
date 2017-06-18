@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-from pdVCF.pdVCF import VCF
+from pdVCF.pdVCF import Vcf
 import pandas as pd
 import time
 
@@ -11,6 +11,6 @@ print("{} seconds - read_cv()".format(round(end, 2)))
 
 
 start = time.time()
-vcf = VCF('vcfs/testing3.vcf')
+vcf = Vcf('vcfs/testing3.vcf')
 end = time.time() - start
 print("{} seconds - vcf2dataframe()".format(round(end, 2)))
