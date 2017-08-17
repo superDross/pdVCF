@@ -53,6 +53,10 @@ sample.vcf
 ```
 
 ## To Do
+- Optimisation
+  - Construct pdVCF using NumPy instead of Pandas
+  - Use pd.eval() and pd.query() to reduce memory usage
+
 - Functionality
   - Implement proper handling of multiallelic variants. Which affects: 
     - Genotype fields: AD, AB
