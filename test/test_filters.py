@@ -1,3 +1,4 @@
+''' Testing the filter_vcf method against equivalent SnpSift commands to ensure proper functionality and expected behaviour occurs'''
 from pdVCF.pdVCF import Vcf
 import unittest
 import os
@@ -5,9 +6,7 @@ import os
 here = os.path.dirname(os.path.realpath(__file__))+"/"
 # 'Tested:' within the docstring details commands it was orginally tested against and which produced the same given answer as pdVcf filtering
 
-
 class TestMandatory(unittest.TestCase):
-
     def test_pos_ranges(self):
         ''' Filter for variants between range
 
@@ -17,7 +16,6 @@ class TestMandatory(unittest.TestCase):
         v = Vcf(here+'vcfs/testing2.vcf')
         v.filter_vcf(['CHROM = 1', 'POS > 2000', 'POS < 2235601'])
         answer = ['1:2234385-C/T', '1:2235243-C/T', '1:2235501-A/GGT']
-
         self.assertEqual(v.vcf.index.tolist(), answer)
 
     def test_loads(self):
@@ -29,12 +27,10 @@ class TestMandatory(unittest.TestCase):
         v = Vcf(here+'vcfs/testing2.vcf')
         v.filter_vcf(['FILTER != PASS', 'ALT = G', 'QUAL > 200'])
         answer = ['1:2235792-A/G']
-
         self.assertEqual(v.vcf.index.tolist(), answer)
 
 
 class TestFilterGenotype(unittest.TestCase):
-    
     def test_gt_filter(self):
         ''' Simple genotype filter
 
@@ -44,7 +40,6 @@ class TestFilterGenotype(unittest.TestCase):
         v = Vcf(here+'vcfs/testing.vcf')
         v.filter_vcf(['GT = 1/1', 'DP > 100'], how='any')
         answer = ['1:2235901-A/G', '1:2235501-A/GGT', '1:2239901-GA/G']
-
         self.assertEqual(v.vcf.index.tolist(), answer)
 
     def test_gt_big_file(self):
@@ -55,9 +50,7 @@ class TestFilterGenotype(unittest.TestCase):
         '''
         v = Vcf(here+'vcfs/testing3.vcf')
         v.filter_vcf(['GT = 1/1', 'DP > 100'], how='any')
-
         self.assertEqual(len(v.vcf), 257)
-
 
     def test_AB(self):
         ''' Filter AB < 0.09
@@ -68,13 +61,10 @@ class TestFilterGenotype(unittest.TestCase):
         v = Vcf(here+'vcfs/testing2.vcf')
         v.filter_vcf(['AB > 0', 'AB < 0.09'])
         answer = ['1:2239999-A/G,T']
-
         self.assertEqual(answer, v.vcf.index.tolist())
 
 
-
 class TestFilterInfo(unittest.TestCase):
-
     def test_info_depth(self):
         ''' Testing filtering the INFO DP field
 
@@ -84,7 +74,6 @@ class TestFilterInfo(unittest.TestCase):
         v = Vcf(here+'vcfs/testing.vcf')
         v.filter_vcf(['DEPTH > 100'])
         answer = ['1:2234385-C/T', '1:2239999-A/G,T']
-
         self.assertEqual(v.vcf.index.tolist(), answer)
 
     def test_info_float_int(self):
@@ -96,7 +85,6 @@ class TestFilterInfo(unittest.TestCase):
         v = Vcf(here+'vcfs/testing2.vcf')
         v.filter_vcf(['AF[0] < 0.1', 'AC[0] > 2'])
         answer = ['1:2235901-A/G']
-
         self.assertEqual(v.vcf.index.tolist(), answer)
 
     def test_string(self):
@@ -108,12 +96,10 @@ class TestFilterInfo(unittest.TestCase):
         v = Vcf(here+'vcfs/testing2.vcf')
         v.filter_vcf(['MEOW != ON'])
         answer = ['1:2234385-C/T', '1:2235901-A/G', '1:2235501-A/GGT']
-
         self.assertEqual(v.vcf.index.tolist(), answer)
 
 
 class TestFilterArgs(unittest.TestCase):
-
     def test_all_genotype(self):
         ''' Test filtering using the all flag in genotype fields
 
@@ -123,7 +109,6 @@ class TestFilterArgs(unittest.TestCase):
         v = Vcf(here+'vcfs/testing.vcf')
         v.filter_vcf(['DP >= 50', 'GQ >= 30'], op='&', how='all')
         answer = ['1:2235792-A/G']
-
         self.assertEqual(v.vcf.index.tolist(), answer)
 
     def test_any_filtering(self):
@@ -136,7 +121,6 @@ class TestFilterArgs(unittest.TestCase):
         v.filter_vcf(['DP >= 50', 'GQ >= 30'], op='&', how='any')
         answer = ['1:2235243-C/T', '1:2235792-A/G', '1:2235901-A/G', 
                   '1:2239999-A/G,T', '1:2235501-A/GGT', '1:2239901-GA/G']
-
         self.assertEqual(v.vcf.index.tolist(), answer)
 
     def test_or_operator(self):
@@ -148,12 +132,10 @@ class TestFilterArgs(unittest.TestCase):
         v = Vcf(here+'vcfs/testing2.vcf')
         v.filter_vcf(['MEOW != ON', 'LOLZ > 200'], op="|")
         answer = ['1:2234385-C/T', '1:2235901-A/G', '1:2239999-A/G,T', '1:2235501-A/GGT']
-
         self.assertEqual(v.vcf.index.tolist(), answer)
 
 
 class TestUltimateFilter(unittest.TestCase):
-    
     def test_ultimate(self):
         ''' Test limits of filtering
 
@@ -164,12 +146,10 @@ class TestUltimateFilter(unittest.TestCase):
         m.filter_vcf(['GT = 0/1', 'DP >= 50', 'GQ >= 30'])
         m.filter_vcf(['AC[0] > 20'])
         m.filter_vcf(['CHROM = 1', 'POS > 2235893', 'ID != .'])
-
         answer = ['1:218519928-A/AAAAC', '1:218578726-ACTCT/A,ACTCTCT,ACT', 
                   '1:218607557-G/T'] 
-
         self.assertEqual(m.vcf.index.tolist(), answer)
+
 
 if __name__ == '__main__':
     unittest.main(warnings='ignore')
-

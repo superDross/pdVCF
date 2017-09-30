@@ -1,5 +1,4 @@
-''' A collection of functions used to compare Vcf objects
-'''
+''' A collection of functions used to compare Vcf objects.'''
 import re
 
 def common_variants(vcf1, vcf2):
@@ -8,11 +7,13 @@ def common_variants(vcf1, vcf2):
     Args:
         vcf1: first VCF object
         vcf2: second VCF object
+    Notes:
+        this could be replaced with a magic method
+        in the Vcf Class
     '''
     return list(set.intersection(set(vcf1.vcf.index.values), 
                                  set(vcf2.vcf.index.values)))    
  
-
 # relic function that could be potentially useful in the near future
 def multi2bi(df):
     ''' Convert multi-allelic UIDs, deriving from a 
@@ -40,5 +41,3 @@ def multi2bi(df):
             result = result + bi
 
     return result
-
-

@@ -30,5 +30,4 @@ class Plot(object):
         ax.set_ylabel('Variants', fontsize=20)
         ax.set_xlabel('Chromosome', fontsize=20)
         ax.set_title('Variants Identified Across Chromosomes', fontsize=25)
-        
         return ax

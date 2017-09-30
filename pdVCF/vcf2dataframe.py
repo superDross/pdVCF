@@ -7,8 +7,6 @@ import sys
 import os
 import collections
 
-
-# path to this %%file
 if sys.platform == "win32":
     file_path = os.path.dirname(os.path.abspath("__file__"))+"\\"
 else:
@@ -16,7 +14,6 @@ else:
 
 pd.set_option('display.max_columns', 500)
 pd.set_option('display.max_colwidth', -1)
-
 
 def vcf2dataframe(filename, genotype_level=True, info_level=True, UID=False):
     '''Open a vcf file and returns a MultiIndex pandas.DataFrame.
@@ -32,46 +29,34 @@ def vcf2dataframe(filename, genotype_level=True, info_level=True, UID=False):
 
         INFO DP field renamed to DEPTH
     '''
-
     if filename.endswith(".gz"):
         raise IOError("pdVCF does not support compressed vcf files.")
-
     # get INFO fields and Headers as lists
     vcf_HEADER = get_vcf_header(filename)
     INFO_FIELDS = get_info_fields(filename)
-
     # Count how many comment lines should be skipped.
     comments = count_comments(filename)
-
     # Return a simple dataframe representative of the vcf data.
     df = pd.read_table(filename, skiprows=comments,
                        names=vcf_HEADER, usecols=range(len(vcf_HEADER)))
     if genotype_level:
         df = get_genotype_data(df)
-
     if info_level:
         df = get_info_data(df, INFO_FIELDS)
-
     if UID:
         df = index2UID(df)
-    
     # replace empty cells and drop FORMAT field
     df = df.replace("", np.nan)
-    
     return df
-
 
 def get_vcf_header(filename):
     ''' Get all header names from a given vcf file and return as a list.
     '''
-
     with open(filename) as input_file:
         row = [x for x in input_file if not x.startswith('##')] # skip unwanted headers
         head = next(iter(row))    # generator to deal with the header line only.
         split_head = [re.sub(r'#|\n', '', x) for x in head.split("\t")]
-
         return split_head
-
 
 def get_info_fields(filename):
     ''' Get all ID names in the given vcfs INFO field and return as a list.
@@ -82,7 +67,6 @@ def get_info_fields(filename):
         info_fields = [x.replace("DP", "DEPTH") for x in info_fields]
         return info_fields
 
-
 def count_comments(filename):
     ''' Count all lines in a given vcf file starting with #.
     '''
@@ -91,12 +75,9 @@ def count_comments(filename):
         for line in f:
             if line.startswith('#'):
                 comments += 1
-
             else:
                 break
-
     return comments
-
 
 def replace_series_strings(df, col, dic, substring):
     ''' Replace the the keys with the items of the given
@@ -111,18 +92,14 @@ def replace_series_strings(df, col, dic, substring):
         entries identified as the key in the given dict
         replaced with the item in said dict
     '''
-
     if not isinstance(substring, bool):
         raise TypeError("substring argument must equal True or False")
-
     for string, correction in dic.items():
         if substring is True:
             df[col] = df[col].str.replace(string, correction)
         elif substring is False:
             df[col] = df[col].replace(string, correction, regex=True)
-
     return df
-
 
 def get_genotype_data(df):
     ''' Give each sample column a second level column for every field
@@ -130,17 +107,14 @@ def get_genotype_data(df):
     Args:
         df: DataFrame deriving from a vcf via vcf2dataframe()
     '''
-
     # contain the variant columns and the sample names in seperate lists
     normal = list(df.iloc[:, :9].columns)
     samples = list(df.iloc[:, 9:].columns)
     form = df['FORMAT'].str.split(":")[0]
-
     # These columns remain the same
     remain = pd.DataFrame(data=df[normal].values,
                           columns=pd.MultiIndex.from_tuples(
                             [(x, '') for x in normal]))
-    
 
     # list of dataframes where every sample has sub columns for each genotype info
     sams = [pd.DataFrame(data=[
@@ -152,17 +126,12 @@ def get_genotype_data(df):
                          columns=pd.MultiIndex.from_product([[col], form]))
 
             for col in samples]
-    
 
     # add allele balance to sample genotype information
     sams = [calc_AB(sam) for sam in sams]
-    
-    
     # concat all dfs in the list
     df2 = pd.concat([remain] + sams, axis=1)
-
     return df2
-
 
 def calc_AB(vcf):
     ''' Calculate allele balance for all samples in a given 
@@ -181,9 +150,7 @@ def calc_AB(vcf):
     DP = vcf.xs('DP', level=1, axis=1).unstack()
     AB = round(pd.to_numeric(AD.str[1]) / pd.to_numeric(DP), 2)
     vcf[sam, 'AB'] = AB.tolist()
-            
     return vcf
-
 
 def get_info_data(df, info_fields):
     ''' Transform the INFO IDs into second level column indexes and return
@@ -207,11 +174,10 @@ def get_info_data(df, info_fields):
         not_present = df['INFO'][~df.INFO.str.contains(name)].add("{}0".format(name))
         present = df['INFO'][df.INFO.str.contains(name)]
         df['INFO'] = not_present.append(present).sort_index()
-
     # reorder INFO fields so they are are all in the same order
     # THIS ASSIGNS THE WRONG VALUES TO AN INFO COLUMN
     #df['INFO'] = df['INFO'].apply(lambda x: ';'.join(elem for elem in sorted(x.split(";"))))
-    
+
     # remove all info_field names from the info values, starting with the info field with the longest name first
     unwanted = info_fields + ['=']
     unwanted.sort(key=len, reverse=True)
@@ -221,16 +187,14 @@ def get_info_data(df, info_fields):
     # create a new multi-index df containing only the info fields with the IDs as the second level
     info = pd.DataFrame(data=list(df['INFO'].str.split(';')),
                         columns=pd.MultiIndex.from_product([ ['INFO'], info_fields]))
-    
+
     if not isinstance(df.columns, pd.MultiIndex):
         # create another multi-index df without the info fields where the second level is nothing
         df = pd.DataFrame(data=df.drop('INFO', axis=1, level=0).values,
                               columns=pd.MultiIndex.from_tuples(
                                 [(x, '') for x in list(df.drop('INFO', axis=1, level=0).columns)] ))
-
     else:
         df = df.drop('INFO', level=0, axis=1)
-
     variant = df.iloc[:, :8]
     samples = df.iloc[:, 8:]
 
@@ -241,23 +205,16 @@ def get_info_data(df, info_fields):
     if 'MQ0' in info_fields and 'MQ' in info_fields:
         final_df = final_df.rename(columns={'MQ0': 'TEMP', 'MQ': 'MQ0'})
         final_df = final_df.rename(columns={'TEMP': 'MQ'})
-
     return final_df
-
 
 def index2UID(df):
     ''' Replace the index with a unique variant identifier.
     '''
     UID = df['CHROM'].astype(str) + ":" + df['POS'].astype(str) + \
           "-" + df['REF'].astype(str) + "/" + df['ALT'].astype(str)
-
     df['UID'] = UID
-
     if df['UID'].value_counts()[0] > 1:
         raise ValueError("The UID is not unique.")
-        
     # remove UID column (UID now only accessible via index)  
     df = df.drop('UID', axis=1)
-
     return df.rename(UID)
-

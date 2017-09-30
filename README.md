@@ -1,14 +1,5 @@
 # pdVCF
-Manipulate a vcf file as a Multi-Indexed Pandas DataFrame
-
-## Filtering
-One of the strengths of filtering via the filtering_vcf() method is its shear flexibility. For example, if one wishes to filter for variants where at least one sample in a given multi-sample vcf has an allele balance between 0.2-0.4, genotype depth above 50, alternative allele depth above 30, genotype quality above 30 and homozygous alternative genotype:
-
-```python3
-from pdVCF.pdVCF import Vcf
-example = Vcf('example.vcf')
-example.filter_vcf(['AB => 0.2', 'AB <= 0.4', 'DP > 50', 'AD[1] > 30', 'GQ > 30', 'GT = 1/1'], op='&', how='any')
-```
+Manipulate a [vcf](https://samtools.github.io/hts-specs/VCFv4.2.pdf) file as a Multi-Indexed Pandas DataFrame
 
 ## Install
 To install and test pdVCF:
@@ -18,6 +9,15 @@ export PYTHONPATH=$PYTHONPATH:/path/to/pdVCF/
 cd pdVCF/
 python pdVCF --test
 ```
+
+## Filtering
+One of the strengths of filtering via the filtering_vcf() method is its shear flexibility. For example, if one wishes to filter for variants where at least one sample in a given multi-sample vcf has an allele balance between 0.3-0.6, alternative allele depth and genotype quality above 30 and homozygous alternative genotype:
+```python3
+from pdVCF.pdVCF import Vcf
+example = Vcf('test/vcfs/testing2.vcf')
+example.filter_vcf(['AB >= 0.3', 'AB <= 0.6', 'GT = 1/1', 'GQ > 30', 'AD[1] > 30'], op='&', how='any')
+```
+![](docs/filtered_vcf2.png?raw=true)
 
 ### Example Usage
 ```python3
@@ -51,11 +51,10 @@ sample.biallelic()
 sample.vcf
 ```
 ## Caveats
-Creating a Vcf object from a large vcf file (>250Mb) will consume considerable memory resources e.g. a 287Mb vcf file consumes 6Gb of memory. It is therefore advised to perform any major filtering prior to initialisation. A secondary filtering stage can be performed after initialisation if complex filtering is required. 
+Creating a Vcf object from a large vcf file will consume considerable memory resources. It is therefore advised to perform any major filtering prior to initialisation using a tools such as [VcfFilerPy](https://github.com/superDross/VcfFilterPy) or [SnpSift](https://github.com/pcingola/SnpSift). A secondary filtering stage can be performed after initialisation if complex filtering is required. 
 
 ## To Do
 - Optimisation
-  - Construct pdVCF using NumPy instead of Pandas
   - Use pd.eval() and pd.query() to reduce memory usage
 
 - Functionality

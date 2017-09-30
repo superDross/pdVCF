@@ -1,5 +1,4 @@
-''' Functions utilised for error handeling 
-'''
+''' Functions utilised for error handeling.'''
 
 def check_fields(vcf, conds):
     ''' Ensure the given list of conditions does not apply to both
@@ -22,5 +21,3 @@ def check_fields(vcf, conds):
 
     if len(set(fields).intersection(info)) > 0 and len(set(fields).intersection(mandatory)) > 0:
         raise ValueError("Elements in {} are present in both the INFO and mandatory fields. Filter mandatory and INFO fields seperately.".format(fields))
-
-
